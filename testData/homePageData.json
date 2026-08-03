@@ -1,0 +1,29 @@
+{
+  "pagePath": "/",
+  "expectedTitle": "Travel Retail",
+  "breadcrumb": "Home",
+  "headings": {
+    "hero": "Travel with a trusted partner",
+    "heroSubtitle": "Nestlé International Travel Retail",
+    "introduction": "Making travel retail fly",
+    "businessLounge": "Welcome to Travel Retails business lounge"
+  },
+  "navigation": {
+    "products": "Products",
+    "whoWeAre": "Who we are",
+    "b2bLogin": "B2B Log in",
+    "contactUs": "Contact us"
+  },
+  "buttons": {
+    "viewAllProducts": "View all products",
+    "prepareForTakeOff": "Prepare for take off"
+  },
+  "paths": {
+    "home": "/",
+    "products": "/products",
+    "aboutUs": "/about-us",
+    "contactUs": "/contact-us",
+    "userLogin": "/user/login"
+  },
+  "minimumBrandLogoCount": 1
+}
