@@ -1,0 +1,37 @@
+{
+  "pagePath": "/products",
+  "expectedTitle": "Products | Nestle International Travel Retail",
+  "breadcrumb": {
+    "home": "Home",
+    "currentPage": "Products"
+  },
+  "headings": {
+    "main": "Our Products"
+  },
+  "search": {
+    "placeholder": "Search products",
+    "validSearchTerm": "After Eight",
+    "invalidSearchTerm": "ProductThatDoesNotExist"
+  },
+  "brands": [
+    "All brands",
+    "KitKat",
+    "Nestle Swiss Chocolate",
+    "Smarties",
+    "After Eight",
+    "Quality Street",
+    "Nestlé Mixes",
+    "Nescafé"
+  ],
+  "expectedProducts": [
+    "AFTER EIGHT box 200g (12/cs)",
+    "AFTER EIGHT Cherry box 400g (12/cs)",
+    "AFTER EIGHT Sharing Bag 15x300g",
+    "AFTER EIGHT Snacking bag 150g (20/cs)"
+  ],
+  "paths": {
+    "home": "/",
+    "products": "/products"
+  },
+  "minimumProductCount": 1
+}

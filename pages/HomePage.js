@@ -8,6 +8,10 @@ const {
     FooterComponent
 } = require('./components/FooterComponent');
 
+const {
+    CookieConsentComponent
+} = require('./components/CookieConsentComponent');
+
 class HomePage {
     constructor(page) {
         this.page = page;
@@ -15,6 +19,7 @@ class HomePage {
         // Reusable Header and Footer components
         this.header = new HeaderComponent(page);
         this.footer = new FooterComponent(page);
+        this.cookieConsent = new CookieConsentComponent(page);
 
         // Home page breadcrumb
         this.breadcrumb = page.locator(
@@ -88,12 +93,13 @@ class HomePage {
         );
     }
 
-    async navigate(pagePath) {
-        await this.page.goto(pagePath);
-        await this.page.waitForLoadState(
-            'domcontentloaded'
-        );
-    }
+   async navigate(pagePath) {
+    await this.page.goto(pagePath, {
+        waitUntil: 'domcontentloaded'
+    });
+
+    await this.cookieConsent.acceptAllCookies();
+}
 
     async verifyHomePageNavigation(
         expectedTitle,
