@@ -1,0 +1,172 @@
+﻿{
+    "aboutUs":  {
+                    "pagePath":  "/about-us",
+                    "expectedTitle":  "About US | Nestle International Travel Retail",
+                    "breadcrumb":  {
+                                       "home":  "Home",
+                                       "currentPage":  "About US"
+                                   },
+                    "hero":  {
+                                 "label":  "About US",
+                                 "heading":  "We are on a journey to excite travellers with new experiences"
+                             },
+                    "sections":  {
+                                     "travelRetailExperience":  "Exploring the Travel Retail Experience",
+                                     "whoWeAre":  "Who we are",
+                                     "onwardsToNumberOne":  "Onwards to No.1",
+                                     "expandYourHorizons":  "Expand your horizons",
+                                     "moreFromNestle":  "More from Nestlé and our company"
+                                 },
+                    "cards":  [
+                                  {
+                                      "title":  "Sustainability",
+                                      "subtitle":  "Our journey to a sustainable future",
+                                      "path":  "/sustainability"
+                                  },
+                                  {
+                                      "title":  "Our brands",
+                                      "subtitle":  "Discover our travel retail favourites",
+                                      "path":  "/products"
+                                  },
+                                  {
+                                      "title":  "Nestlé Sustainably Sourced Cocoa",
+                                      "subtitle":  "Our Travel Retail Exclusive Range",
+                                      "path":  "/nestle-sustainably-sourced"
+                                  }
+                              ],
+                    "awardLogos":  [
+                                       "FRONTIER AWARDS 2023",
+                                       "FRONTIER AWARDS 2022"
+                                   ],
+                    "externalLinks":  [
+                                          "Nestlé’s History",
+                                          "Diversity, equity \u0026 inclusion",
+                                          "Our Business strategy",
+                                          "Our business principles",
+                                          "Our purpose and values",
+                                          "Quality and Safety",
+                                          "Nestlé News"
+                                      ],
+                    "paths":  {
+                                  "home":  "/",
+                                  "aboutUs":  "/about-us",
+                                  "foodCategory":  "/food-1-category",
+                                  "products":  "/products",
+                                  "sustainability":  "/sustainability",
+                                  "sustainablySourced":  "/nestle-sustainably-sourced"
+                              },
+                    "minimumAwardLogoCount":  2,
+                    "minimumHorizonCardCount":  3
+                },
+    "foodCategory":  {
+                         "pagePath":  "/food-1-category",
+                         "expectedTitle":  "Food as the #1 category | Nestle International Travel Retail",
+                         "breadcrumb":  {
+                                            "home":  "Home",
+                                            "currentPage":  "Food As The #1 Category"
+                                        },
+                         "hero":  {
+                                      "heading":  "Onwards to No.1",
+                                      "description":  "We are on a journey to a special destination, to make food the No.1 most purchased category in travel retail, and we’d love you to come with us"
+                                  },
+                         "sections":  {
+                                          "helpingFoodCategory":  "Helping the food category take off",
+                                          "takingNewShores":  "Taking the category to new shores",
+                                          "introducingVerse":  "Introducing VERSE",
+                                          "beyondConfectionery":  "Beyond Confectionery",
+                                          "powerfulCompanion":  "A Powerful Companion"
+                                      },
+                         "verseDrivers":  [
+                                              {
+                                                  "title":  "Value",
+                                                  "description":  "I want the best choice of brands and I want to be surprised"
+                                              },
+                                              {
+                                                  "title":  "Engagement",
+                                                  "description":  "Help me discover what\u0027s new and different along my journey"
+                                              },
+                                              {
+                                                  "title":  "Sense of Place",
+                                                  "description":  "Creating memories by purchasing something that reminds me of my trip"
+                                              },
+                                              {
+                                                  "title":  "Regeneration",
+                                                  "description":  "Show me what you are doing for the environment beyond sustainability"
+                                              }
+                                          ],
+                         "beyondConfectioneryCards":  [
+                                                          {
+                                                              "title":  "Coffee",
+                                                              "descriptionKeyword":  "84% of travellers"
+                                                          },
+                                                          {
+                                                              "title":  "Wellness",
+                                                              "descriptionKeyword":  "physical"
+                                                          }
+                                                      ],
+                         "contentKeywords":  {
+                                                 "foodCategory":  "Currently food is underperforming and underexploited",
+                                                 "research":  "in-depth research study",
+                                                 "basketGoal":  "50% of consumer baskets by 2030",
+                                                 "currentProgress":  "35%",
+                                                 "verseDrivers":  "The 5 key drivers of growth in food",
+                                                 "companion":  "think holistically about the food category"
+                                             },
+                         "paths":  {
+                                       "home":  "/",
+                                       "aboutUs":  "/about-us",
+                                       "foodCategory":  "/food-1-category",
+                                       "location":  "/location"
+                                   },
+                         "minimumVerseDriverCount":  4,
+                         "minimumBeyondConfectioneryCardCount":  2
+                     },
+    "location":  {
+                     "pagePath":  "/location",
+                     "expectedTitle":  "Location | Nestle International Travel Retail",
+                     "breadcrumb":  {
+                                        "home":  "Home",
+                                        "currentPage":  "Location"
+                                    },
+                     "headings":  {
+                                      "main":  "Location",
+                                      "contactUs":  "Contact us"
+                                  },
+                     "company":  {
+                                     "name":  "Nestle International Travel Retail, A Division of Nestle Enterprises S.A.",
+                                     "addressKeyword":  "Vevey Switzerland"
+                                 },
+                     "contactIntro":  "We\u0027d love to hear from you",
+                     "formLabels":  {
+                                        "firstName":  "First name",
+                                        "lastName":  "Last name",
+                                        "email":  "Email",
+                                        "country":  "Country",
+                                        "phoneNumber":  "Phone number",
+                                        "productDescription":  "Product Description",
+                                        "batchCode":  "Batch Code",
+                                        "ean":  "EAN",
+                                        "bestBeforeDate":  "Best Before Date",
+                                        "message":  "Message",
+                                        "sendMessage":  "Send Message"
+                                    },
+                     "formData":  {
+                                      "firstName":  "Automation",
+                                      "lastName":  "Tester",
+                                      "email":  "automation.tester@example.com",
+                                      "country":  "",
+                                      "phoneNumber":  "+12025550123",
+                                      "productDescription":  "Automated form field validation only. This form will not be submitted.",
+                                      "batchCode":  "AUTO-BATCH-001",
+                                      "ean":  "1234567890123",
+                                      "bestBeforeDate":  "12/31/2027",
+                                      "message":  "This is an automated field validation. The form will not be submitted."
+                                  },
+                     "paths":  {
+                                   "home":  "/",
+                                   "aboutUs":  "/about-us",
+                                   "foodCategory":  "/food-1-category",
+                                   "location":  "/location"
+                               }
+                 }
+}

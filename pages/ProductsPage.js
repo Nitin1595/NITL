@@ -1,4 +1,4 @@
-const { expect } = require('@playwright/test');
+﻿const { expect } = require('@playwright/test');
 
 const {
     HeaderComponent
@@ -183,7 +183,9 @@ class ProductsPage {
          * dynamic search, brand, and pagination query parameters.
          */
         await expect(this.page).toHaveURL(
-            url => url.pathname === productsPath
+            new RegExp(
+                `${productsPath}/?(?:\\?.*)?$`
+            )
         );
 
         await expect(this.page).toHaveTitle(
@@ -251,6 +253,8 @@ class ProductsPage {
     }
 
     async selectBrand(brandName) {
+        await this.cookieConsent.acceptAllCookies();
+
         const brandFilter =
             this.getBrandFilter(brandName);
 
@@ -306,6 +310,8 @@ class ProductsPage {
     }
 
     async searchForProduct(searchTerm) {
+        await this.cookieConsent.acceptAllCookies();
+
         await this.productsSearchInput.fill(
             searchTerm
         );
@@ -322,6 +328,8 @@ class ProductsPage {
     }
 
     async clearProductSearch() {
+        await this.cookieConsent.acceptAllCookies();
+
         await this.productsSearchInput.fill('');
 
         await this.productsSearchButton.click();

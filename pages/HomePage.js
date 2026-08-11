@@ -1,4 +1,4 @@
-const { expect } = require('@playwright/test');
+﻿const { expect } = require('@playwright/test');
 
 const {
     HeaderComponent
@@ -93,13 +93,13 @@ class HomePage {
         );
     }
 
-   async navigate(pagePath) {
-    await this.page.goto(pagePath, {
-        waitUntil: 'domcontentloaded'
-    });
+    async navigate(pagePath) {
+        await this.page.goto(pagePath, {
+            waitUntil: 'domcontentloaded'
+        });
 
-    await this.cookieConsent.acceptAllCookies();
-}
+        await this.cookieConsent.acceptAllCookies();
+    }
 
     async verifyHomePageNavigation(
         expectedTitle,
@@ -182,6 +182,8 @@ class HomePage {
     }
 
     async navigateToProducts() {
+        await this.cookieConsent.acceptAllCookies();
+
         await this.viewAllProductsButton.click();
     }
 
@@ -236,6 +238,8 @@ class HomePage {
     }
 
     async navigateToUserLogin() {
+        await this.cookieConsent.acceptAllCookies();
+
         await this.prepareForTakeOffButton.click();
     }
 }

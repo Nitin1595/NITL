@@ -1,36 +1,73 @@
-const { expect } = require('@playwright/test');
+﻿const { expect } = require('@playwright/test');
 
 class CookieConsentComponent {
     constructor(page) {
         this.page = page;
 
-        this.cookieSettingsButton = page.getByRole(
+        // Complete OneTrust cookie-consent container
+        this.cookieConsentSdk = page.locator(
+            '#onetrust-consent-sdk'
+        );
+
+        // Main cookie banner
+        this.cookieBanner = page.locator(
+            '#onetrust-banner-sdk'
+        );
+
+        // Dark overlay covering the website
+        this.cookieOverlay = page.locator(
+            '.onetrust-pc-dark-filter'
+        );
+
+        // Cookie action buttons
+        this.acceptAllButton = page.locator(
+            '#onetrust-accept-btn-handler'
+        );
+
+        this.rejectAllButton = page.locator(
+            '#onetrust-reject-all-handler'
+        );
+
+        this.cookieSettingsButton = page.locator(
+            '#onetrust-pc-btn-handler'
+        );
+
+        // Accessible-name fallbacks
+        this.acceptAllButtonByRole = page.getByRole(
             'button',
             {
-                name: 'Cookie Settings',
-                exact: true
+                name: /accept all cookies/i
             }
         );
 
-        this.rejectAllButton = page.getByRole(
+        this.rejectAllButtonByRole = page.getByRole(
             'button',
             {
-                name: 'Reject All',
-                exact: true
+                name: /reject all/i
             }
         );
 
-        this.acceptAllButton = page.getByRole(
+        this.cookieSettingsButtonByRole = page.getByRole(
             'button',
             {
-                name: 'Accept all cookies',
-                exact: true
+                name: /cookie settings/i
             }
         );
     }
 
     async isCookiePopupDisplayed() {
-        return this.acceptAllButton
+        const acceptButtonByIdVisible =
+            await this.acceptAllButton
+                .isVisible({
+                    timeout: 3000
+                })
+                .catch(() => false);
+
+        if (acceptButtonByIdVisible) {
+            return true;
+        }
+
+        return this.acceptAllButtonByRole
             .isVisible({
                 timeout: 3000
             })
@@ -45,51 +82,143 @@ class CookieConsentComponent {
             return;
         }
 
+        const acceptButtonByIdVisible =
+            await this.acceptAllButton
+                .isVisible()
+                .catch(() => false);
+
+        const acceptButton =
+            acceptButtonByIdVisible
+                ? this.acceptAllButton
+                : this.acceptAllButtonByRole;
+
         await expect(
-            this.acceptAllButton
+            acceptButton,
+            'Accept all cookies button should be visible'
         ).toBeVisible();
 
-        await this.acceptAllButton.click();
+        await expect(
+            acceptButton,
+            'Accept all cookies button should be enabled'
+        ).toBeEnabled();
+
+        await acceptButton.click();
 
         await expect(
-            this.acceptAllButton
+            acceptButton,
+            'Cookie popup should close after accepting cookies'
         ).toBeHidden({
-            timeout: 10000
+            timeout: 15000
         });
+
+        await this.waitForCookieOverlayToDisappear();
     }
 
     async rejectAllCookies() {
-        const rejectButtonDisplayed =
+        const rejectButtonByIdVisible =
             await this.rejectAllButton
                 .isVisible({
                     timeout: 3000
                 })
                 .catch(() => false);
 
-        if (!rejectButtonDisplayed) {
+        const rejectButtonByRoleVisible =
+            await this.rejectAllButtonByRole
+                .isVisible({
+                    timeout: 3000
+                })
+                .catch(() => false);
+
+        if (
+            !rejectButtonByIdVisible &&
+            !rejectButtonByRoleVisible
+        ) {
             return;
         }
 
-        await this.rejectAllButton.click();
+        const rejectButton =
+            rejectButtonByIdVisible
+                ? this.rejectAllButton
+                : this.rejectAllButtonByRole;
 
         await expect(
-            this.rejectAllButton
+            rejectButton,
+            'Reject All button should be visible'
+        ).toBeVisible();
+
+        await rejectButton.click();
+
+        await expect(
+            rejectButton,
+            'Cookie popup should close after rejecting cookies'
         ).toBeHidden({
-            timeout: 10000
+            timeout: 15000
+        });
+
+        await this.waitForCookieOverlayToDisappear();
+    }
+
+    async waitForCookieOverlayToDisappear() {
+        const overlayExists =
+            await this.cookieOverlay.count();
+
+        if (overlayExists === 0) {
+            return;
+        }
+
+        await expect(
+            this.cookieOverlay,
+            'Cookie overlay should disappear'
+        ).toBeHidden({
+            timeout: 15000
         });
     }
 
     async verifyCookiePopupDisplayed() {
         await expect(
-            this.acceptAllButton
-        ).toBeVisible();
+            this.cookieConsentSdk
+        ).toBeAttached();
+
+        const acceptButtonByIdVisible =
+            await this.acceptAllButton
+                .isVisible()
+                .catch(() => false);
+
+        const acceptButton =
+            acceptButtonByIdVisible
+                ? this.acceptAllButton
+                : this.acceptAllButtonByRole;
 
         await expect(
-            this.rejectAllButton
+            acceptButton
         ).toBeVisible();
 
+        const rejectButtonByIdVisible =
+            await this.rejectAllButton
+                .isVisible()
+                .catch(() => false);
+
+        const rejectButton =
+            rejectButtonByIdVisible
+                ? this.rejectAllButton
+                : this.rejectAllButtonByRole;
+
         await expect(
-            this.cookieSettingsButton
+            rejectButton
+        ).toBeVisible();
+
+        const settingsButtonByIdVisible =
+            await this.cookieSettingsButton
+                .isVisible()
+                .catch(() => false);
+
+        const settingsButton =
+            settingsButtonByIdVisible
+                ? this.cookieSettingsButton
+                : this.cookieSettingsButtonByRole;
+
+        await expect(
+            settingsButton
         ).toBeVisible();
     }
 }

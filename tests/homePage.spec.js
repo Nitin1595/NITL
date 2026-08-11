@@ -1,4 +1,4 @@
-// const { test, expect } = require('@playwright/test');
+﻿// const { test, expect } = require('@playwright/test');
 
 // const { HomePage } = require('../pages/HomePage');
 
@@ -7,7 +7,7 @@
 // );
 
 // test.describe(
-//     'Nestlé International Travel Retail Home Page',
+//     'NestlÃ© International Travel Retail Home Page',
 //     () => {
 //         test.beforeEach(async ({ page }) => {
 //             const homePage = new HomePage(page);
@@ -30,7 +30,7 @@
 //         );
 
 //         test(
-//             'Nestlé International Travel Retail logo is displayed',
+//             'NestlÃ© International Travel Retail logo is displayed',
 //             async ({ page }) => {
 //                 const homePage = new HomePage(page);
 

@@ -1,4 +1,4 @@
-const { expect } = require('@playwright/test');
+﻿const { expect } = require('@playwright/test');
 
 class FooterComponent {
     constructor(page) {

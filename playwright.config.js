@@ -1,4 +1,4 @@
-const {
+﻿const {
     defineConfig,
     devices
 } = require('@playwright/test');

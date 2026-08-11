@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+﻿const { test, expect } = require('@playwright/test');
 
 test('Basic Playwright test', async ({ page }) => {
     const response = await page.goto('/', {
@@ -17,3 +17,4 @@ test('Basic Playwright test', async ({ page }) => {
 
     await expect(page).toHaveURL(/platformsh\.site/);
 });
+
