@@ -1,0 +1,65 @@
+{
+  "expectedTitle": "Dashboard | Nestle International Travel Retail",
+  "breadcrumb": {
+    "home": "Home",
+    "currentPage": "Dashboard"
+  },
+  "headings": {
+    "main": "Welcome to NITR\u2019s business hub!",
+    "dashboardMenu": "Dashboard menu"
+  },
+  "descriptionKeyword": "Let your business take off with helpful product information",
+  "navigation": [
+    {
+      "name": "Dashboard",
+      "path": "/dashboard"
+    },
+    {
+      "name": "Products",
+      "path": "/catalog"
+    },
+    {
+      "name": "File a Claim",
+      "path": "/dashboard/claim-management-form"
+    },
+    {
+      "name": "General Sales & Delivery Terms",
+      "path": "/general-sales-delivery-terms"
+    }
+  ],
+  "updates": {
+    "label": "Latest updates from the last",
+    "defaultValue": "1",
+    "defaultText": "15 days",
+    "options": [
+      {
+        "value": "1",
+        "label": "15 days"
+      },
+      {
+        "value": "2",
+        "label": "30 days"
+      },
+      {
+        "value": "3",
+        "label": "60 days"
+      }
+    ],
+    "minimumUpdateCount": 1
+  },
+  "message": {
+    "type": "Message",
+    "keyword": "Please contact your NITR contact"
+  },
+  "footer": {
+    "logoutText": "Log out"
+  },
+  "paths": {
+    "home": "/",
+    "dashboard": "/dashboard",
+    "catalog": "/catalog",
+    "fileClaim": "/dashboard/claim-management-form",
+    "terms": "/general-sales-delivery-terms",
+    "logoutPrefix": "/user/logout"
+  }
+}

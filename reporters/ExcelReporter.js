@@ -1,468 +1,10 @@
-﻿// const ExcelJS = require('exceljs');
-// const fs = require('fs');
-// const path = require('path');
-
-// class ExcelReporter {
-//     constructor() {
-//         this.results = [];
-//         this.executionStartTime = Date.now();
-//     }
-
-//     onTestEnd(test, result) {
-//         const status =
-//             result.status === 'passed' ? 'Pass' : 'Fail';
-
-//         let remarks;
-
-//         if (status === 'Pass') {
-//             remarks = 'Validation successful';
-//         } else {
-//             remarks =
-//                 result.error?.message ||
-//                 'Validation failed';
-//         }
-
-//         remarks = remarks
-//             .replace(/\u001b\[[0-9;]*m/g, '')
-//             .replace(/\s+/g, ' ')
-//             .trim()
-//             .substring(0, 250);
-
-//         this.results.push({
-//             page: this.getPageName(test.title),
-//             component: test.title,
-//             status,
-//             remarks
-//         });
-//     }
-
-//     getPageName(testTitle) {
-//         const normalizedTitle = testTitle.toLowerCase();
-
-//         if (
-//             normalizedTitle.includes('logo') ||
-//             normalizedTitle.includes('products tab') ||
-//             normalizedTitle.includes('who we are') ||
-//             normalizedTitle.includes('b2b log') ||
-//             normalizedTitle.includes('contact us tab') ||
-//             normalizedTitle.includes('search icon')
-//         ) {
-//             return 'Header';
-//         }
-
-//         if (normalizedTitle.includes('footer')) {
-//             return 'Footer';
-//         }
-
-//         return 'Home';
-//     }
-
-//     async onEnd() {
-//         const workbook = new ExcelJS.Workbook();
-
-//         workbook.creator = 'Playwright Automation';
-//         workbook.created = new Date();
-
-//         const worksheet = workbook.addWorksheet(
-//             'Website Validation Report'
-//         );
-
-//         worksheet.views = [
-//             {
-//                 showGridLines: true
-//             }
-//         ];
-
-//         const executionEndTime = Date.now();
-
-//         const executionTimeSeconds = (
-//             (executionEndTime -
-//                 this.executionStartTime) /
-//             1000
-//         ).toFixed(2);
-
-//         const totalTests = this.results.length;
-
-//         const passedTests = this.results.filter(
-//             testResult =>
-//                 testResult.status === 'Pass'
-//         ).length;
-
-//         const failedTests = this.results.filter(
-//             testResult =>
-//                 testResult.status === 'Fail'
-//         ).length;
-
-//         const websiteUrl =
-//             process.env.BASE_URL ||
-//             'Not configured';
-
-//         const executionDate =
-//             new Date().toLocaleDateString('en-GB');
-
-//         worksheet.columns = [
-//             {
-//                 key: 'serialNumber',
-//                 width: 10
-//             },
-//             {
-//                 key: 'page',
-//                 width: 25
-//             },
-//             {
-//                 key: 'component',
-//                 width: 45
-//             },
-//             {
-//                 key: 'status',
-//                 width: 15
-//             },
-//             {
-//                 key: 'remarks',
-//                 width: 55
-//             }
-//         ];
-
-//         worksheet.mergeCells('A1:E1');
-
-//         const titleCell = worksheet.getCell('A1');
-
-//         titleCell.value =
-//             'Website Link Validation Report';
-
-//         titleCell.font = {
-//             bold: true,
-//             size: 16
-//         };
-
-//         titleCell.alignment = {
-//             horizontal: 'left',
-//             vertical: 'middle'
-//         };
-
-//         worksheet.getRow(1).height = 28;
-
-//         worksheet.mergeCells('A3:E3');
-
-//         const executionHeading =
-//             worksheet.getCell('A3');
-
-//         executionHeading.value =
-//             'Execution Details';
-
-//         executionHeading.font = {
-//             bold: true,
-//             size: 12
-//         };
-
-//         executionHeading.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {
-//                 argb: 'FFD9EAF7'
-//             }
-//         };
-
-//         const executionDetails = [
-//             ['Website', websiteUrl],
-//             ['Execution Date', executionDate],
-//             ['Browser', 'chromium'],
-//             [
-//                 'Execution Time',
-//                 `${executionTimeSeconds} sec`
-//             ]
-//         ];
-
-//         executionDetails.forEach(
-//             (detail, index) => {
-//                 const rowNumber = index + 4;
-
-//                 worksheet.getCell(
-//                     `A${rowNumber}`
-//                 ).value = detail[0];
-
-//                 worksheet.mergeCells(
-//                     `B${rowNumber}:E${rowNumber}`
-//                 );
-
-//                 worksheet.getCell(
-//                     `B${rowNumber}`
-//                 ).value = detail[1];
-
-//                 worksheet.getCell(
-//                     `A${rowNumber}`
-//                 ).font = {
-//                     bold: true
-//                 };
-//             }
-//         );
-
-//         worksheet.mergeCells('A9:E9');
-
-//         const summaryHeading =
-//             worksheet.getCell('A9');
-
-//         summaryHeading.value = 'Summary';
-
-//         summaryHeading.font = {
-//             bold: true,
-//             size: 12
-//         };
-
-//         summaryHeading.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {
-//                 argb: 'FFD9EAF7'
-//             }
-//         };
-
-//         worksheet.getCell('A11').value =
-//             'Total Components';
-
-//         worksheet.getCell('B11').value =
-//             'Passed';
-
-//         worksheet.getCell('C11').value =
-//             'Failed';
-
-//         worksheet.getCell('A12').value =
-//             totalTests;
-
-//         worksheet.getCell('B12').value =
-//             passedTests;
-
-//         worksheet.getCell('C12').value =
-//             failedTests;
-
-//         worksheet.getCell('B12').font = {
-//             bold: true,
-//             color: {
-//                 argb: 'FF008000'
-//             }
-//         };
-
-//         worksheet.getCell('C12').font = {
-//             bold: true,
-//             color: {
-//                 argb: 'FFFF0000'
-//             }
-//         };
-
-//         worksheet.mergeCells('A14:E14');
-
-//         const detailsHeading =
-//             worksheet.getCell('A14');
-
-//         detailsHeading.value =
-//             'Detailed Results';
-
-//         detailsHeading.font = {
-//             bold: true,
-//             size: 12
-//         };
-
-//         detailsHeading.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {
-//                 argb: 'FFD9EAF7'
-//             }
-//         };
-
-//         const headingRow =
-//             worksheet.getRow(16);
-
-//         headingRow.values = [
-//             'Sl.No',
-//             'Page',
-//             'Button / Component',
-//             'Status',
-//             'Remarks'
-//         ];
-
-//         headingRow.font = {
-//             bold: true,
-//             color: {
-//                 argb: 'FFFFFFFF'
-//             }
-//         };
-
-//         headingRow.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {
-//                 argb: 'FF1F4E78'
-//             }
-//         };
-
-//         headingRow.alignment = {
-//             horizontal: 'center',
-//             vertical: 'middle'
-//         };
-
-//         headingRow.height = 24;
-
-//         this.results.forEach(
-//             (testResult, index) => {
-//                 const row = worksheet.addRow({
-//                     serialNumber: index + 1,
-//                     page: testResult.page,
-//                     component:
-//                         testResult.component,
-//                     status: testResult.status,
-//                     remarks: testResult.remarks
-//                 });
-
-//                 row.alignment = {
-//                     vertical: 'top',
-//                     wrapText: true
-//                 };
-
-//                 const statusCell =
-//                     row.getCell(4);
-
-//                 if (
-//                     testResult.status === 'Pass'
-//                 ) {
-//                     statusCell.font = {
-//                         bold: true,
-//                         color: {
-//                             argb: 'FF008000'
-//                         }
-//                     };
-
-//                     statusCell.fill = {
-//                         type: 'pattern',
-//                         pattern: 'solid',
-//                         fgColor: {
-//                             argb: 'FFE2F0D9'
-//                         }
-//                     };
-//                 } else {
-//                     statusCell.font = {
-//                         bold: true,
-//                         color: {
-//                             argb: 'FFFF0000'
-//                         }
-//                     };
-
-//                     statusCell.fill = {
-//                         type: 'pattern',
-//                         pattern: 'solid',
-//                         fgColor: {
-//                             argb: 'FFF4CCCC'
-//                         }
-//                     };
-//                 }
-//             }
-//         );
-
-//         const lastRowNumber =
-//             worksheet.rowCount;
-
-//         for (
-//             let rowNumber = 16;
-//             rowNumber <= lastRowNumber;
-//             rowNumber += 1
-//         ) {
-//             const row =
-//                 worksheet.getRow(rowNumber);
-
-//             for (
-//                 let columnNumber = 1;
-//                 columnNumber <= 5;
-//                 columnNumber += 1
-//             ) {
-//                 const cell =
-//                     row.getCell(columnNumber);
-
-//                 cell.border = {
-//                     top: {
-//                         style: 'thin',
-//                         color: {
-//                             argb: 'FF808080'
-//                         }
-//                     },
-//                     left: {
-//                         style: 'thin',
-//                         color: {
-//                             argb: 'FF808080'
-//                         }
-//                     },
-//                     bottom: {
-//                         style: 'thin',
-//                         color: {
-//                             argb: 'FF808080'
-//                         }
-//                     },
-//                     right: {
-//                         style: 'thin',
-//                         color: {
-//                             argb: 'FF808080'
-//                         }
-//                     }
-//                 };
-//             }
-//         }
-
-//         worksheet.autoFilter = {
-//             from: 'A16',
-//             to: 'E16'
-//         };
-
-//         worksheet.views = [
-//             {
-//                 state: 'frozen',
-//                 ySplit: 16,
-//                 showGridLines: true
-//             }
-//         ];
-
-//         worksheet.pageSetup = {
-//             orientation: 'landscape',
-//             fitToPage: true,
-//             fitToWidth: 1,
-//             fitToHeight: 0
-//         };
-
-//         const reportDirectory = path.join(
-//             process.cwd(),
-//             'excel-report'
-//         );
-
-//         fs.mkdirSync(reportDirectory, {
-//             recursive: true
-//         });
-
-//         const timestamp = new Date()
-//             .toISOString()
-//             .replace(/[:.]/g, '-');
-
-//         const reportPath = path.join(
-//             reportDirectory,
-//             `Website-Validation-Report-${timestamp}.xlsx`
-//         );
-
-//         await workbook.xlsx.writeFile(
-//             reportPath
-//         );
-
-//         console.log('');
-//         console.log(
-//             'Excel report generated successfully:'
-//         );
-
-//         console.log(reportPath);
-//     }
-// }
-
-// module.exports = ExcelReporter;
-
-
-const ExcelJS = require('exceljs');
+﻿const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
+
+require('dotenv').config({
+    quiet: true
+});
 
 class ExcelReporter {
     constructor() {
@@ -471,75 +13,65 @@ class ExcelReporter {
     }
 
     onTestEnd(test, result) {
-        const testSteps = this.getAllTestSteps(
+        const businessSteps = this.collectBusinessSteps(
             result.steps || []
         );
 
-        /*
-         * When test.step() entries exist, create one Excel row
-         * for every executed test step.
-         */
-        if (testSteps.length > 0) {
-            testSteps.forEach(step => {
-                this.results.push({
-                    page: this.getPageName(
-                        test.title,
-                        step.title
-                    ),
-
-                    component: step.title,
-
-                    status: step.error
-                        ? 'Fail'
-                        : 'Pass',
-
-                    remarks: step.error
-                        ? this.cleanErrorMessage(
-                            step.error.message
+        if (businessSteps.length === 0) {
+            this.results.push({
+                module: this.getModuleName(test.title),
+                page: this.getPageName(
+                    test.title,
+                    test.title
+                ),
+                button: test.title,
+                status:
+                    result.status === 'passed'
+                        ? 'Pass'
+                        : 'Fail',
+                remarks:
+                    result.status === 'passed'
+                        ? 'Validation successful'
+                        : this.cleanErrorMessage(
+                            result.error?.message
                         )
-                        : 'Validation successful'
-                });
             });
 
             return;
         }
 
-        /*
-         * Fallback for tests without test.step().
-         */
-        const testPassed =
-            result.status === 'passed';
+        for (const step of businessSteps) {
+            this.results.push({
+                module: this.getModuleName(test.title),
 
-        this.results.push({
-            page: this.getPageName(
-                test.title,
-                test.title
-            ),
+                page: this.getPageName(
+                    test.title,
+                    step.title
+                ),
 
-            component: test.title,
+                button: step.title,
 
-            status: testPassed
-                ? 'Pass'
-                : 'Fail',
+                status:
+                    step.error
+                        ? 'Fail'
+                        : 'Pass',
 
-            remarks: testPassed
-                ? 'Validation successful'
-                : this.cleanErrorMessage(
-                    result.error?.message ||
-                    'Validation failed'
-                )
-        });
+                remarks:
+                    step.error
+                        ? this.cleanErrorMessage(
+                            step.error.message
+                        )
+                        : this.getSuccessRemark(
+                            step.title
+                        )
+            });
+        }
     }
 
-    getAllTestSteps(steps) {
+    collectBusinessSteps(steps) {
         const collectedSteps = [];
 
         for (const step of steps) {
-            /*
-             * Only collect steps created using test.step().
-             * Internal Playwright actions such as page.goto(),
-             * locator.click(), and expect() are excluded.
-             */
             if (step.category === 'test.step') {
                 collectedSteps.push(step);
             }
@@ -549,7 +81,7 @@ class ExcelReporter {
                 step.steps.length > 0
             ) {
                 collectedSteps.push(
-                    ...this.getAllTestSteps(
+                    ...this.collectBusinessSteps(
                         step.steps
                     )
                 );
@@ -559,78 +91,306 @@ class ExcelReporter {
         return collectedSteps;
     }
 
-    getPageName(testTitle, componentTitle) {
-        const fullText = `${testTitle} ${componentTitle}`
-            .toLowerCase();
-
-        const componentText =
-            componentTitle.toLowerCase();
-
-        const headerKeywords = [
-            'header',
-            'logo',
-            'products tab',
-            'who we are',
-            'b2b log',
-            'contact us tab',
-            'search icon'
-        ];
-
-        const isHeaderComponent =
-            headerKeywords.some(keyword =>
-                componentText.includes(keyword)
-            );
-
-        if (isHeaderComponent) {
-            return 'Header';
-        }
-
-        if (componentText.includes('footer')) {
-            return 'Footer';
-        }
+    getModuleName(testTitle) {
+        const normalizedTitle =
+            testTitle.toLowerCase();
 
         if (
-            fullText.includes('products page') ||
-            componentText.includes('product')
+            normalizedTitle.includes(
+                'products page'
+            )
         ) {
             return 'Products';
         }
 
         if (
-            fullText.includes('who we are') ||
-            fullText.includes('about us') ||
-            fullText.includes('food category') ||
-            fullText.includes('location')
+            normalizedTitle.includes(
+                'who we are'
+            ) ||
+            normalizedTitle.includes(
+                'about us'
+            ) ||
+            normalizedTitle.includes(
+                'food category'
+            ) ||
+            normalizedTitle.includes(
+                'location'
+            )
         ) {
             return 'Who We Are';
         }
 
         if (
-            fullText.includes('b2b login') ||
-            fullText.includes('b2b log in')
+            normalizedTitle.includes(
+                'b2b'
+            )
         ) {
             return 'B2B Login';
         }
 
-        if (fullText.includes('contact us')) {
+        if (
+            normalizedTitle.includes(
+                'contact'
+            )
+        ) {
             return 'Contact Us';
         }
 
         return 'Home';
     }
 
+    getPageName(testTitle, stepTitle) {
+        const testText =
+            testTitle.toLowerCase();
+
+        const stepText =
+            stepTitle.toLowerCase();
+
+        if (
+            stepText.includes('header') ||
+            stepText.includes('logo') ||
+            stepText.includes('products tab') ||
+            stepText.includes('who we are menu') ||
+            stepText.includes('b2b log in tab') ||
+            stepText.includes('contact us tab') ||
+            stepText.includes('search icon')
+        ) {
+            return 'Header';
+        }
+
+        if (stepText.includes('footer')) {
+            return 'Footer';
+        }
+
+        if (
+            stepText.includes('about us') ||
+            stepText.includes(
+                'travel retail experience'
+            ) ||
+            stepText.includes(
+                'award logo'
+            ) ||
+            stepText.includes(
+                'expand your horizons'
+            ) ||
+            stepText.includes(
+                'more from nestlé'
+            )
+        ) {
+            return 'About Us';
+        }
+
+        if (
+            stepText.includes('food category') ||
+            stepText.includes('food as the') ||
+            stepText.includes('verse') ||
+            stepText.includes(
+                'beyond confectionery'
+            ) ||
+            stepText.includes(
+                'powerful companion'
+            ) ||
+            stepText.includes(
+                'new shores'
+            )
+        ) {
+            return 'Food Category';
+        }
+
+        if (
+            stepText.includes('location') ||
+            stepText.includes(
+                'company information'
+            ) ||
+            stepText.includes(
+                'company address'
+            )
+        ) {
+            return 'Location';
+        }
+
+        if (
+            stepText.includes('contact us form') ||
+            stepText.includes(
+                'contact form'
+            ) ||
+            stepText.includes('captcha') ||
+            stepText.includes(
+                'send message'
+            )
+        ) {
+            return 'Contact Form';
+        }
+
+        if (
+            testText.includes(
+                'products page'
+            ) ||
+            stepText.includes('product') ||
+            stepText.includes('brand filter') ||
+            stepText.includes('pagination')
+        ) {
+            return 'Products';
+        }
+
+        if (
+            stepText.includes('banner') ||
+            stepText.includes('hero')
+        ) {
+            return 'Hero Banner';
+        }
+
+        if (
+            stepText.includes(
+                'business lounge'
+            )
+        ) {
+            return 'Business Lounge';
+        }
+
+        return 'Home';
+    }
+
+    getSuccessRemark(stepTitle) {
+        const normalizedTitle =
+            stepTitle.toLowerCase();
+
+        if (
+            normalizedTitle.includes(
+                'navigate'
+            )
+        ) {
+            return 'Navigation successful';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'heading'
+            ) ||
+            normalizedTitle.includes(
+                'title'
+            ) ||
+            normalizedTitle.includes(
+                'breadcrumb'
+            )
+        ) {
+            return 'Text verified and element is visible';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'image'
+            ) ||
+            normalizedTitle.includes(
+                'logo'
+            )
+        ) {
+            return 'Image is visible';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'button'
+            ) ||
+            normalizedTitle.includes(
+                'link'
+            ) ||
+            normalizedTitle.includes(
+                'menu'
+            ) ||
+            normalizedTitle.includes(
+                'tab'
+            ) ||
+            normalizedTitle.includes(
+                'icon'
+            )
+        ) {
+            return 'Element visible and enabled';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'search'
+            )
+        ) {
+            return 'Search functionality verified';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'filter'
+            )
+        ) {
+            return 'Filter functionality verified';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'form'
+            ) ||
+            normalizedTitle.includes(
+                'field'
+            )
+        ) {
+            return 'Form field validation successful';
+        }
+
+        if (
+            normalizedTitle.includes(
+                'captcha'
+            )
+        ) {
+            return 'CAPTCHA section is displayed';
+        }
+
+        return 'Validation successful';
+    }
+
     cleanErrorMessage(errorMessage) {
-        return String(
-            errorMessage ||
-            'Validation failed'
-        )
+        if (!errorMessage) {
+            return 'Validation failed';
+        }
+
+        return String(errorMessage)
             .replace(
                 /\u001b\[[0-9;]*m/g,
                 ''
             )
             .replace(/\s+/g, ' ')
             .trim()
-            .substring(0, 500);
+            .substring(0, 1000);
+    }
+
+    groupResultsByPage() {
+        const groups = [];
+        const groupMap = new Map();
+
+        for (const result of this.results) {
+            const groupKey =
+                `${result.module}::${result.page}`;
+
+            if (!groupMap.has(groupKey)) {
+                const newGroup = {
+                    module: result.module,
+                    page: result.page,
+                    results: []
+                };
+
+                groupMap.set(
+                    groupKey,
+                    newGroup
+                );
+
+                groups.push(newGroup);
+            }
+
+            groupMap
+                .get(groupKey)
+                .results
+                .push(result);
+        }
+
+        return groups;
     }
 
     async onEnd() {
@@ -638,14 +398,14 @@ class ExcelReporter {
             new ExcelJS.Workbook();
 
         workbook.creator =
-            'Playwright JavaScript Automation';
+            'NITLN Playwright Automation';
 
         workbook.created =
             new Date();
 
         const worksheet =
             workbook.addWorksheet(
-                'Website Validation Report',
+                'Detailed Validation Report',
                 {
                     views: [
                         {
@@ -655,15 +415,28 @@ class ExcelReporter {
                 }
             );
 
-        const executionEndTime =
-            Date.now();
-
-        const executionTimeSeconds = (
-            (
-                executionEndTime -
-                this.executionStartTime
-            ) / 1000
-        ).toFixed(2);
+        worksheet.columns = [
+            {
+                key: 'serialNumber',
+                width: 10
+            },
+            {
+                key: 'page',
+                width: 30
+            },
+            {
+                key: 'button',
+                width: 48
+            },
+            {
+                key: 'status',
+                width: 18
+            },
+            {
+                key: 'remarks',
+                width: 70
+            }
+        ];
 
         const totalComponents =
             this.results.length;
@@ -680,54 +453,17 @@ class ExcelReporter {
                     result.status === 'Fail'
             ).length;
 
-        const websiteUrl =
-            process.env.BASE_URL ||
-            'Not configured';
+        const executionTimeSeconds = (
+            (
+                Date.now() -
+                this.executionStartTime
+            ) / 1000
+        ).toFixed(2);
 
-        const executionDate =
-            new Date().toLocaleString(
-                'en-GB',
-                {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                }
-            );
-
-        worksheet.columns = [
-            {
-                key: 'serialNumber',
-                width: 10
-            },
-            {
-                key: 'page',
-                width: 24
-            },
-            {
-                key: 'component',
-                width: 48
-            },
-            {
-                key: 'status',
-                width: 15
-            },
-            {
-                key: 'remarks',
-                width: 62
-            }
-        ];
-
-        this.createReportTitle(
-            worksheet
-        );
+        this.createTitle(worksheet);
 
         this.createExecutionDetails(
             worksheet,
-            websiteUrl,
-            executionDate,
             executionTimeSeconds
         );
 
@@ -738,11 +474,7 @@ class ExcelReporter {
             failedComponents
         );
 
-        this.createDetailedResultsHeader(
-            worksheet
-        );
-
-        this.addDetailedResults(
+        this.createDetailedResults(
             worksheet
         );
 
@@ -771,7 +503,7 @@ class ExcelReporter {
         const reportPath =
             path.join(
                 reportDirectory,
-                `Website-Validation-Report-${timestamp}.xlsx`
+                `NITLN-Detailed-Validation-Report-${timestamp}.xlsx`
             );
 
         await workbook.xlsx.writeFile(
@@ -780,23 +512,24 @@ class ExcelReporter {
 
         console.log('');
         console.log(
-            'Excel report generated successfully:'
+            'Detailed Excel report generated successfully:'
         );
+
         console.log(reportPath);
     }
 
-    createReportTitle(worksheet) {
+    createTitle(worksheet) {
         worksheet.mergeCells('A1:E1');
 
         const titleCell =
             worksheet.getCell('A1');
 
         titleCell.value =
-            'Website Link Validation Report';
+            'NITLN Website Detailed Validation Report';
 
         titleCell.font = {
             bold: true,
-            size: 16,
+            size: 17,
             color: {
                 argb: 'FF000000'
             }
@@ -806,22 +539,20 @@ class ExcelReporter {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFE7E6E6'
+                argb: 'FFD9E7F5'
             }
         };
 
         titleCell.alignment = {
-            horizontal: 'left',
+            horizontal: 'center',
             vertical: 'middle'
         };
 
-        worksheet.getRow(1).height = 28;
+        worksheet.getRow(1).height = 30;
     }
 
     createExecutionDetails(
         worksheet,
-        websiteUrl,
-        executionDate,
         executionTimeSeconds
     ) {
         worksheet.mergeCells('A3:E3');
@@ -841,14 +572,24 @@ class ExcelReporter {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFD9EAF7'
+                argb: 'FFB4CCE3'
             }
         };
+
+        const executionDate =
+            new Date().toLocaleString(
+                'en-IN',
+                {
+                    timeZone:
+                        'Asia/Kolkata'
+                }
+            );
 
         const executionDetails = [
             [
                 'Website',
-                websiteUrl
+                process.env.BASE_URL ||
+                    'Not configured'
             ],
             [
                 'Execution Date',
@@ -876,10 +617,7 @@ class ExcelReporter {
                 worksheet.getCell(
                     `A${rowNumber}`
                 ).font = {
-                    bold: true,
-                    color: {
-                        argb: 'FF666666'
-                    }
+                    bold: true
                 };
 
                 worksheet.mergeCells(
@@ -923,55 +661,41 @@ class ExcelReporter {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFD9EAF7'
+                argb: 'FFB4CCE3'
             }
         };
 
-        worksheet.getCell('A11').value =
-            'Total Components';
+        const summaryHeaderRow =
+            worksheet.getRow(11);
 
-        worksheet.getCell('B11').value =
-            'Passed';
+        summaryHeaderRow.values = [
+            'Total Components',
+            'Passed',
+            'Failed'
+        ];
 
-        worksheet.getCell('C11').value =
-            'Failed';
+        summaryHeaderRow.font = {
+            bold: true
+        };
 
-        worksheet.getCell('A12').value =
-            totalComponents;
+        summaryHeaderRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {
+                argb: 'FFD9D9D9'
+            }
+        };
 
-        worksheet.getCell('B12').value =
-            passedComponents;
+        const summaryValueRow =
+            worksheet.getRow(12);
 
-        worksheet.getCell('C12').value =
-            failedComponents;
+        summaryValueRow.values = [
+            totalComponents,
+            passedComponents,
+            failedComponents
+        ];
 
-        for (
-            const cellAddress
-            of ['A11', 'B11', 'C11']
-        ) {
-            const cell =
-                worksheet.getCell(
-                    cellAddress
-                );
-
-            cell.font = {
-                bold: true
-            };
-
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: {
-                    argb: 'FFE7E6E6'
-                }
-            };
-
-            cell.alignment = {
-                horizontal: 'center'
-            };
-        }
-
-        worksheet.getCell('A12').font = {
+        summaryValueRow.font = {
             bold: true
         };
 
@@ -988,150 +712,207 @@ class ExcelReporter {
                 argb: 'FFFF0000'
             }
         };
+
+        for (
+            let rowNumber = 11;
+            rowNumber <= 12;
+            rowNumber += 1
+        ) {
+            for (
+                let columnNumber = 1;
+                columnNumber <= 3;
+                columnNumber += 1
+            ) {
+                const cell =
+                    worksheet
+                        .getRow(rowNumber)
+                        .getCell(columnNumber);
+
+                cell.border =
+                    this.getThinBorder();
+
+                cell.alignment = {
+                    horizontal: 'center',
+                    vertical: 'middle'
+                };
+            }
+        }
     }
 
-    createDetailedResultsHeader(
-        worksheet
-    ) {
-        worksheet.mergeCells('A14:E14');
+    createDetailedResults(worksheet) {
+        worksheet.mergeCells('A15:E15');
 
         const heading =
-            worksheet.getCell('A14');
+            worksheet.getCell('A15');
 
         heading.value =
             'Detailed Results';
 
         heading.font = {
             bold: true,
-            size: 12
+            size: 13
         };
 
         heading.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFD9EAF7'
+                argb: 'FFB4CCE3'
             }
         };
 
         const headerRow =
-            worksheet.getRow(16);
+            worksheet.getRow(17);
 
         headerRow.values = [
             'Sl.No',
             'Page',
-            'Button / Component',
+            'Button / Validation',
             'Status',
             'Remarks'
         ];
 
         headerRow.font = {
-            bold: true,
-            color: {
-                argb: 'FFFFFFFF'
-            }
+            bold: true
         };
 
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FF1F4E78'
+                argb: 'FFD9D9D9'
             }
         };
 
         headerRow.alignment = {
-            horizontal: 'center',
-            vertical: 'middle',
-            wrapText: true
+            horizontal: 'left',
+            vertical: 'middle'
         };
 
-        headerRow.height = 26;
-    }
+        headerRow.height = 24;
 
-    addDetailedResults(worksheet) {
-        this.results.forEach(
-            (result, index) => {
+        const groups =
+            this.groupResultsByPage();
+
+        let currentRowNumber = 18;
+        let serialNumber = 1;
+
+        for (const group of groups) {
+            const groupStartRow =
+                currentRowNumber;
+
+            for (
+                const result
+                of group.results
+            ) {
                 const row =
-                    worksheet.addRow({
-                        serialNumber:
-                            index + 1,
+                    worksheet.getRow(
+                        currentRowNumber
+                    );
 
-                        page:
-                            result.page,
+                row.getCell(3).value =
+                    result.button;
 
-                        component:
-                            result.component,
+                row.getCell(4).value =
+                    result.status;
 
-                        status:
-                            result.status,
-
-                        remarks:
-                            result.remarks
-                    });
+                row.getCell(5).value =
+                    result.remarks;
 
                 row.alignment = {
                     vertical: 'top',
                     wrapText: true
                 };
 
-                row.height = 24;
-
-                const statusCell =
-                    row.getCell(4);
-
-                statusCell.font = {
-                    bold: true
-                };
-
-                statusCell.alignment = {
-                    horizontal: 'left',
-                    vertical: 'middle'
-                };
+                this.formatStatusCell(
+                    row.getCell(4),
+                    result.status
+                );
 
                 if (
-                    result.status === 'Pass'
+                    result.status === 'Fail'
                 ) {
-                    statusCell.font = {
-                        bold: true,
-                        color: {
-                            argb: 'FF008000'
-                        }
-                    };
-
-                    statusCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: {
-                            argb: 'FFE2F0D9'
-                        }
-                    };
-                } else {
-                    statusCell.font = {
-                        bold: true,
-                        color: {
-                            argb: 'FFFF0000'
-                        }
-                    };
-
-                    statusCell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: {
-                            argb: 'FFF4CCCC'
-                        }
-                    };
-
                     row.getCell(5).fill = {
                         type: 'pattern',
                         pattern: 'solid',
                         fgColor: {
-                            argb: 'FFFFE6E6'
+                            argb: 'FFFFE5E5'
                         }
                     };
                 }
+
+                currentRowNumber += 1;
             }
-        );
+
+            const groupEndRow =
+                currentRowNumber - 1;
+
+            if (
+                groupEndRow >
+                groupStartRow
+            ) {
+                worksheet.mergeCells(
+                    `A${groupStartRow}:A${groupEndRow}`
+                );
+
+                worksheet.mergeCells(
+                    `B${groupStartRow}:B${groupEndRow}`
+                );
+            }
+
+            worksheet.getCell(
+                `A${groupStartRow}`
+            ).value = serialNumber;
+
+            worksheet.getCell(
+                `B${groupStartRow}`
+            ).value = group.page;
+
+            worksheet.getCell(
+                `A${groupStartRow}`
+            ).alignment = {
+                horizontal: 'center',
+                vertical: 'middle'
+            };
+
+            worksheet.getCell(
+                `B${groupStartRow}`
+            ).alignment = {
+                horizontal: 'left',
+                vertical: 'middle',
+                wrapText: true
+            };
+
+            serialNumber += 1;
+        }
+    }
+
+    formatStatusCell(cell, status) {
+        cell.font = {
+            bold: true,
+            color: {
+                argb:
+                    status === 'Pass'
+                        ? 'FF008000'
+                        : 'FFFF0000'
+            }
+        };
+
+        cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {
+                argb:
+                    status === 'Pass'
+                        ? 'FFE2F0D9'
+                        : 'FFF4CCCC'
+            }
+        };
+
+        cell.alignment = {
+            horizontal: 'left',
+            vertical: 'middle'
+        };
     }
 
     applyFinalFormatting(worksheet) {
@@ -1139,7 +920,7 @@ class ExcelReporter {
             worksheet.rowCount;
 
         for (
-            let rowNumber = 16;
+            let rowNumber = 17;
             rowNumber <= lastRow;
             rowNumber += 1
         ) {
@@ -1158,44 +939,26 @@ class ExcelReporter {
                         columnNumber
                     );
 
-                cell.border = {
-                    top: {
-                        style: 'thin',
-                        color: {
-                            argb: 'FF9E9E9E'
-                        }
-                    },
-                    left: {
-                        style: 'thin',
-                        color: {
-                            argb: 'FF9E9E9E'
-                        }
-                    },
-                    bottom: {
-                        style: 'thin',
-                        color: {
-                            argb: 'FF9E9E9E'
-                        }
-                    },
-                    right: {
-                        style: 'thin',
-                        color: {
-                            argb: 'FF9E9E9E'
-                        }
-                    }
+                cell.border =
+                    this.getThinBorder();
+
+                cell.alignment = {
+                    ...cell.alignment,
+                    vertical: 'top',
+                    wrapText: true
                 };
             }
         }
 
         worksheet.autoFilter = {
-            from: 'A16',
-            to: 'E16'
+            from: 'A17',
+            to: 'E17'
         };
 
         worksheet.views = [
             {
                 state: 'frozen',
-                ySplit: 16,
+                ySplit: 17,
                 showGridLines: true
             }
         ];
@@ -1205,6 +968,22 @@ class ExcelReporter {
             fitToPage: true,
             fitToWidth: 1,
             fitToHeight: 0
+        };
+    }
+
+    getThinBorder() {
+        const borderStyle = {
+            style: 'thin',
+            color: {
+                argb: 'FF808080'
+            }
+        };
+
+        return {
+            top: borderStyle,
+            left: borderStyle,
+            bottom: borderStyle,
+            right: borderStyle
         };
     }
 }

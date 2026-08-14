@@ -1,0 +1,32 @@
+{
+  "backgroundPagePath": "/",
+  "modal": {
+    "dialogTitle": "Login",
+    "heading": "Welcome back",
+    "instruction": "Please use your credentials to sign in below"
+  },
+  "fields": {
+    "usernameLabel": "User name or email address",
+    "usernameDescription": "You can use your username or email address to login.",
+    "passwordLabel": "Password"
+  },
+  "links": {
+    "forgotPassword": "Forgot your password?",
+    "forgotPasswordPath": "/user/password"
+  },
+  "buttons": {
+    "login": "Login"
+  },
+  "validation": {
+    "usernameRequired": true,
+    "usernameMaximumLength": "60",
+    "passwordRequired": true,
+    "passwordMaximumLength": "128",
+    "passwordInputType": "password"
+  },
+  "paths": {
+    "home": "/",
+    "dashboard": "/dashboard",
+    "forgotPassword": "/user/password"
+  }
+}

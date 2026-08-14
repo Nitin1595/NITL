@@ -1,0 +1,103 @@
+{
+  "page": {
+    "path": "/general-sales-delivery-terms",
+    "expectedTitle": "General Sales & Delivery Terms | Nestle International Travel Retail",
+    "heading": "General Sales & Delivery Terms"
+  },
+  "breadcrumb": [
+    "Home",
+    "General Sales & Delivery Terms"
+  ],
+  "documents": [
+    {
+      "name": "2025 General Sales and Delivery Terms.pdf",
+      "path": "/sites/default/files/2025-01/2025%20General%20Sales%20and%20Delivery%20Terms.pdf",
+      "target": "_blank",
+      "relKeyword": "noopener"
+    },
+    {
+      "name": "2025 NITR General Storage and Transportation Conditions.pdf",
+      "path": "/sites/default/files/2025-01/2025%20NITR%20General%20Storage%20and%20Transportation%20Conditions.pdf",
+      "target": "_blank",
+      "relKeyword": "noopener"
+    }
+  ],
+  "expectedDocumentCount": 2,
+  "header": {
+    "logoPath": "/",
+    "navigation": [
+      {
+        "name": "Products",
+        "path": "/products"
+      },
+      {
+        "name": "Our Catalog",
+        "path": "/catalog"
+      },
+      {
+        "name": "Contact us",
+        "path": "/contact-us"
+      }
+    ],
+    "whoWeAreLinks": [
+      {
+        "name": "About US",
+        "path": "/about-us"
+      },
+      {
+        "name": "Food as the #1 category",
+        "path": "/food-1-category"
+      },
+      {
+        "name": "Location",
+        "path": "/location"
+      }
+    ],
+    "searchPlaceholder": "Search",
+    "searchMaximumLength": "128"
+  },
+  "footer": {
+    "internalLinks": [
+      {
+        "name": "About us",
+        "path": "/about-us"
+      },
+      {
+        "name": "Contact Us",
+        "path": "/contact-us"
+      },
+      {
+        "name": "Sitemap",
+        "path": "/sitemap"
+      }
+    ],
+    "externalLinks": [
+      {
+        "name": "Privacy Policy",
+        "hrefKeyword": "nestle.com/aboutus/businessprinciples/privacy"
+      },
+      {
+        "name": "Cookie policy",
+        "hrefKeyword": "nestle.com/info/cookies"
+      }
+    ],
+    "logoutText": "Log out",
+    "logoutPathPrefix": "/user/logout",
+    "copyrightKeyword": "Nestlé",
+    "copyrightText": "Nestlé – All Rights Reserved."
+  },
+  "paths": {
+    "home": "/",
+    "products": "/products",
+    "dashboard": "/dashboard",
+    "catalog": "/catalog",
+    "claimManagement": "/dashboard/claim-management-form",
+    "generalSalesTerms": "/general-sales-delivery-terms",
+    "logoutPrefix": "/user/logout"
+  },
+  "safety": {
+    "downloadDocuments": false,
+    "openDocuments": false,
+    "validateLinksOnly": true
+  }
+}

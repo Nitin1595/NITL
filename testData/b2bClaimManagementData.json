@@ -1,0 +1,209 @@
+{
+  "page": {
+    "path": "/dashboard/claim-management-form",
+    "expectedTitle": "Claim management form | Nestle International Travel Retail",
+    "heading": "Claim management form"
+  },
+  "breadcrumb": [
+    "Home",
+    "Dashboard",
+    "Claim Management Form"
+  ],
+  "dashboardNavigation": [
+    {
+      "name": "Dashboard",
+      "path": "/dashboard"
+    },
+    {
+      "name": "Products",
+      "path": "/catalog"
+    },
+    {
+      "name": "File a Claim",
+      "path": "/dashboard/claim-management-form"
+    },
+    {
+      "name": "General Sales & Delivery Terms",
+      "path": "/general-sales-delivery-terms"
+    }
+  ],
+  "fields": {
+    "customerName": {
+      "label": "Customer name",
+      "name": "customer_name",
+      "type": "text",
+      "placeholder": "Trading Ltd.",
+      "maximumLength": "255",
+      "required": true
+    },
+    "emailAddress": {
+      "label": "Email address",
+      "name": "email_address",
+      "type": "email",
+      "placeholder": "example.user@company.com",
+      "maximumLength": "254",
+      "required": true
+    },
+    "orderInvoice": {
+      "label": "Order / Invoice #",
+      "name": "order_invoice",
+      "type": "text",
+      "maximumLength": "255",
+      "required": true
+    },
+    "customerPo": {
+      "label": "Customer PO #",
+      "name": "customer_po",
+      "type": "number",
+      "placeholder": "098765",
+      "required": true
+    },
+    "nitrSo": {
+      "label": "NITR SO #",
+      "name": "nitr_so",
+      "type": "number",
+      "placeholder": "12345676543",
+      "required": false
+    },
+    "goodsReceiptDate": {
+      "label": "Date of goods receipt",
+      "name": "date_of_goods_receipt",
+      "type": "date",
+      "required": true
+    },
+    "goodsReceiptLocation": {
+      "label": "Location of goods receipt",
+      "name": "location_of_goods_receipt",
+      "type": "text",
+      "placeholder": "London, UK",
+      "maximumLength": "255",
+      "required": true
+    },
+    "itemCode": {
+      "label": "Item code",
+      "name": "item_code",
+      "type": "number",
+      "placeholder": "04678",
+      "required": true
+    },
+    "batchCode": {
+      "label": "Batch code",
+      "name": "batch_code",
+      "type": "number",
+      "placeholder": "123309673",
+      "required": true
+    },
+    "itemName": {
+      "label": "Item name",
+      "name": "item_name",
+      "type": "text",
+      "placeholder": "KITKAT 2F Phone Box Tin 414g (20-cs)",
+      "maximumLength": "255",
+      "required": true
+    },
+    "complaintDescription": {
+      "label": "Description of complaint",
+      "name": "description_of_complaint",
+      "required": true,
+      "rows": "4"
+    },
+    "quantity": {
+      "label": "Quantity",
+      "name": "quantity",
+      "type": "text",
+      "placeholder": "12 boxes",
+      "maximumLength": "255",
+      "required": true
+    },
+    "valueAndCurrency": {
+      "label": "Value and currency",
+      "name": "value_and_currency",
+      "type": "text",
+      "placeholder": "GBP",
+      "maximumLength": "255",
+      "required": true
+    }
+  },
+  "uploads": {
+    "proofOfDelivery": {
+      "label": "Proof of delivery - CMR or POD",
+      "name": "files[copy_of_transport_cmr]",
+      "required": true,
+      "multiple": false,
+      "description": [
+        "One file only.",
+        "2 MB limit.",
+        "Allowed types: gif jpg jpeg png pdf."
+      ],
+      "fixturePath": "testData/files/sample-proof-of-delivery.pdf",
+      "expectedFileName": "sample-proof-of-delivery.pdf"
+    },
+    "photos": {
+      "labelKeyword": "Photos",
+      "required": false,
+      "multiple": true,
+      "accept": "image/*",
+      "description": [
+        "Maximum 5 files.",
+        "2 MB limit.",
+        "Allowed types: gif jpg jpeg png."
+      ],
+      "fixturePaths": [
+        "testData/files/sample-product-1.png",
+        "testData/files/sample-product-2.png"
+      ],
+      "expectedFileNames": [
+        "sample-product-1.png",
+        "sample-product-2.png"
+      ]
+    }
+  },
+  "captcha": {
+    "legend": "CAPTCHA",
+    "descriptionKeyword": "human visitor",
+    "iframeTitle": "reCAPTCHA"
+  },
+  "buttons": {
+    "submit": "Submit claim"
+  },
+  "testData": {
+    "customerName": "NITR Automation Test Customer",
+    "orderInvoice": "AUTO-INV-20260813",
+    "customerPo": "987654",
+    "nitrSo": "12345676543",
+    "goodsReceiptDate": "2026-08-12",
+    "goodsReceiptLocation": "London, UK",
+    "itemCode": "4678",
+    "batchCode": "123309673",
+    "itemName": "KITKAT Automation Test Product",
+    "complaintDescription": "Automation validation only. This synthetic claim must not be submitted.",
+    "quantity": "12 boxes",
+    "valueAndCurrency": "100 GBP"
+  },
+  "footer": {
+    "links": [
+      {
+        "name": "About us",
+        "path": "/about-us"
+      },
+      {
+        "name": "Contact Us",
+        "path": "/contact-us"
+      },
+      {
+        "name": "Sitemap",
+        "path": "/sitemap"
+      }
+    ],
+    "logoutText": "Log out",
+    "copyrightKeyword": "Nestlé"
+  },
+  "paths": {
+    "home": "/",
+    "dashboard": "/dashboard",
+    "catalog": "/catalog",
+    "claimManagement": "/dashboard/claim-management-form",
+    "terms": "/general-sales-delivery-terms",
+    "logoutPrefix": "/user/logout"
+  }
+}

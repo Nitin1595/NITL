@@ -1,0 +1,3830 @@
+===== HeaderComponent.js =====
+const { expect } = require('@playwright/test');
+
+class HeaderComponent {
+    constructor(page) {
+        this.page = page;
+
+        // Complete site Header
+        this.header = page.locator('header#header');
+
+        this.mainNavigation = this.header.locator(
+            '#block-main-navigation'
+        );
+
+        // Home logo
+        this.homeLogo = this.header.locator(
+            'a.navbar-brand[rel="home"]'
+        );
+
+        this.homeLogoImage = this.homeLogo.locator(
+            'img'
+        );
+
+        // Main navigation links
+        this.productsLink = this.mainNavigation.locator(
+            'a[href="/products"]'
+        );
+
+        this.whoWeAreDropdown = this.mainNavigation.locator(
+            'li.menu-item--expanded.dropdown'
+        );
+
+        this.whoWeAreMenu = this.whoWeAreDropdown.locator(
+            'a[data-bs-toggle="dropdown"]'
+        ).first();
+
+        this.whoWeAreDropdownMenu =
+            this.whoWeAreDropdown.locator(
+                'ul.dropdown-menu'
+            );
+
+        // Stable Who We Are submenu links
+        this.aboutUsLink = this.whoWeAreDropdown.locator(
+            'a[href="/about-us"]'
+        );
+
+        this.foodCategoryLink =
+            this.whoWeAreDropdown.locator(
+                'a[href="/food-1-category"]'
+            );
+
+        this.locationLink =
+            this.whoWeAreDropdown.locator(
+                'a[href="/location"]'
+            );
+
+        // Catalog and Contact Us
+        this.catalogLink = this.mainNavigation.locator(
+            'a[href="/catalog"]'
+        );
+
+        this.contactUsLink = this.mainNavigation.locator(
+            'a[href="/contact-us"]'
+        );
+
+        // Public B2B Login link
+        this.b2bLoginLink = this.header.locator(
+            'a[href="/login-modal"]'
+        ).first();
+
+        // Search controls
+        this.searchButton = this.header.locator(
+            'button.search__toggler'
+        );
+
+        this.searchInput = this.header.locator(
+            'form.simple-search-form input[name="search"]'
+        );
+
+        // Mobile navigation
+        this.mobileMenuButton = this.header.locator(
+            'button.navbar-toggler'
+        );
+
+        this.collapsingNavigation = this.header.locator(
+            '#CollapsingNavbar'
+        );
+
+        // OneTrust controls
+        this.oneTrustBanner = page.locator(
+            '#onetrust-banner-sdk'
+        );
+
+        this.oneTrustPreferenceCenter = page.locator(
+            '#onetrust-pc-sdk'
+        );
+
+        this.oneTrustDarkOverlay = page.locator(
+            '.onetrust-pc-dark-filter'
+        );
+
+        this.acceptAllCookiesButton = page.locator(
+            '#onetrust-accept-btn-handler'
+        );
+
+        this.rejectAllCookiesButton = page.locator(
+            '#onetrust-reject-all-handler'
+        );
+
+        this.acceptRecommendedButton = page.locator(
+            '#accept-recommended-btn-handler'
+        );
+
+        this.savePreferencesButton = page.locator(
+            '.save-preference-btn-handler'
+        );
+
+        this.closePreferencesButton = page.locator(
+            '#close-pc-btn-handler'
+        );
+    }
+
+    async isVisible(locator, timeout = 1500) {
+        return locator.isVisible({
+            timeout
+        }).catch(() => false);
+    }
+
+    async clickIfVisible(locator) {
+        const visible = await this.isVisible(
+            locator
+        );
+
+        if (!visible) {
+            return false;
+        }
+
+        await locator.click({
+            force: true,
+            timeout: 5000
+        }).catch(() => {});
+
+        return true;
+    }
+
+    async ensureOneTrustIsClosed() {
+        const preferenceCenterVisible =
+            await this.isVisible(
+                this.oneTrustPreferenceCenter
+            );
+
+        const overlayVisible =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (
+            preferenceCenterVisible ||
+            overlayVisible
+        ) {
+            const acceptedRecommended =
+                await this.clickIfVisible(
+                    this.acceptRecommendedButton
+                );
+
+            if (!acceptedRecommended) {
+                const preferencesSaved =
+                    await this.clickIfVisible(
+                        this.savePreferencesButton
+                    );
+
+                if (!preferencesSaved) {
+                    await this.clickIfVisible(
+                        this.closePreferencesButton
+                    );
+                }
+            }
+        }
+
+        const bannerVisible =
+            await this.isVisible(
+                this.oneTrustBanner
+            );
+
+        if (bannerVisible) {
+            const cookiesAccepted =
+                await this.clickIfVisible(
+                    this.acceptAllCookiesButton
+                );
+
+            if (!cookiesAccepted) {
+                await this.clickIfVisible(
+                    this.rejectAllCookiesButton
+                );
+            }
+        }
+
+        await this.oneTrustPreferenceCenter.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+
+        await this.oneTrustDarkOverlay.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+
+        const overlayStillVisible =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (overlayStillVisible) {
+            await this.page.evaluate(() => {
+                document
+                    .querySelectorAll(
+                        '.onetrust-pc-dark-filter'
+                    )
+                    .forEach(overlay => {
+                        overlay.style.display = 'none';
+                        overlay.style.visibility = 'hidden';
+                        overlay.style.pointerEvents = 'none';
+                    });
+            });
+
+            await this.oneTrustDarkOverlay.waitFor({
+                state: 'hidden',
+                timeout: 5000
+            }).catch(() => {});
+        }
+    }
+
+    async verifyHeaderDisplayed() {
+        await expect(
+            this.header,
+            'Site Header should be displayed'
+        ).toBeVisible();
+    }
+
+    async verifyLogoDisplayed() {
+        await expect(
+            this.homeLogo,
+            'Home logo link should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.homeLogoImage,
+            'Home logo image should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.homeLogo
+        ).toHaveAttribute(
+            'href',
+            '/'
+        );
+
+        await expect(
+            this.homeLogoImage
+        ).toHaveAttribute(
+            'src',
+            /logo\.svg/
+        );
+
+        await expect(
+            this.homeLogoImage
+        ).toHaveAttribute(
+            'alt',
+            'Home'
+        );
+    }
+
+    async verifyNavigationDisplayed() {
+        await expect(
+            this.mainNavigation,
+            'Main navigation should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.productsLink,
+            'Products link should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.whoWeAreMenu,
+            'Who We Are menu should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.catalogLink,
+            'Our Catalog link should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.contactUsLink,
+            'Contact Us link should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.productsLink
+        ).toHaveAttribute(
+            'href',
+            '/products'
+        );
+
+        await expect(
+            this.catalogLink
+        ).toHaveAttribute(
+            'href',
+            '/catalog'
+        );
+
+        await expect(
+            this.contactUsLink
+        ).toHaveAttribute(
+            'href',
+            '/contact-us'
+        );
+    }
+
+    async verifyPublicB2BLoginDisplayed() {
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should be displayed'
+        ).toBeVisible();
+
+        await expect(
+            this.b2bLoginLink
+        ).toHaveAttribute(
+            'href',
+            '/login-modal'
+        );
+    }
+
+    async verifyWhoWeAreLinksExist() {
+        await expect(
+            this.aboutUsLink,
+            'Who We Are link should exist: About Us'
+        ).toBeAttached();
+
+        await expect(
+            this.foodCategoryLink,
+            'Who We Are link should exist: Food as the #1 category'
+        ).toBeAttached();
+
+        await expect(
+            this.locationLink,
+            'Who We Are link should exist: Location'
+        ).toBeAttached();
+
+        await expect(
+            this.aboutUsLink
+        ).toHaveAttribute(
+            'href',
+            '/about-us'
+        );
+
+        await expect(
+            this.foodCategoryLink
+        ).toHaveAttribute(
+            'href',
+            '/food-1-category'
+        );
+
+        await expect(
+            this.locationLink
+        ).toHaveAttribute(
+            'href',
+            '/location'
+        );
+    }
+
+    async openWhoWeAreMenu() {
+        await this.ensureOneTrustIsClosed();
+
+        await expect(
+            this.whoWeAreMenu,
+            'Who We Are dropdown should be visible'
+        ).toBeVisible();
+
+        const expandedState =
+            await this.whoWeAreMenu.getAttribute(
+                'aria-expanded'
+            );
+
+        if (expandedState !== 'true') {
+            await this.whoWeAreMenu.click({
+                timeout: 15000
+            });
+        }
+
+        await expect(
+            this.whoWeAreMenu
+        ).toHaveAttribute(
+            'aria-expanded',
+            'true'
+        );
+
+        await expect(
+            this.whoWeAreDropdownMenu,
+            'Who We Are dropdown menu should be visible'
+        ).toBeVisible();
+    }       }
+
+module.exports = {
+    HeaderComponent
+};
+
+===== HomePage.js =====
+const { expect } = require('@playwright/test');
+
+const {
+    HeaderComponent
+} = require('./components/HeaderComponent');
+
+const {
+    FooterComponent
+} = require('./components/FooterComponent');
+
+const {
+    CookieConsentComponent
+} = require('./components/CookieConsentComponent');
+
+class HomePage {
+    constructor(page) {
+        this.page = page;
+
+        // Reusable Header and Footer components
+        this.header = new HeaderComponent(page);
+        this.footer = new FooterComponent(page);
+        this.cookieConsent = new CookieConsentComponent(page);
+
+        // Home page breadcrumb
+        this.breadcrumb = page.locator(
+            'nav[aria-label="breadcrumb"]'
+        );
+
+        // Hero banner
+        this.heroSection = page.locator('#block-hero');
+
+        this.heroHeading = this.heroSection.getByRole(
+            'heading',
+            {
+                level: 1
+            }
+        );
+
+        this.heroSubtitle = this.heroSection.getByRole(
+            'heading',
+            {
+                level: 5
+            }
+        );
+
+        this.heroImage = this.heroSection.locator(
+            'picture img'
+        );
+
+        // Making Travel Retail Fly section
+        this.introductionHeading = page.getByRole(
+            'heading',
+            {
+                name: /making travel retail fly/i
+            }
+        );
+
+        // Brand logos section
+        this.brandLogoSection = page.locator(
+            '.paragraph--type--c-teasercycle'
+        );
+
+        this.brandLogos = this.brandLogoSection.locator(
+            'img.image-style-logo-md'
+        );
+
+        // View All Products button
+        this.viewAllProductsButton = page.locator(
+            'a.btn.btn-primary[href="/products"]'
+        );
+
+        // Travel Retail Business Lounge section
+        this.businessLoungeHeading = page.getByRole(
+            'heading',
+            {
+                name: /welcome to travel retails business lounge/i
+            }
+        );
+
+        this.businessLoungeSection =
+            this.businessLoungeHeading.locator(
+                'xpath=ancestor::div[contains(@class, "paragraph")][1]'
+            );
+
+        this.businessLoungeImage =
+            this.businessLoungeSection.locator(
+                'img.image-style-text-image'
+            );
+
+        // Prepare for Take Off button
+        this.prepareForTakeOffButton = page.locator(
+            'a.btn[href="/user/login"]'
+        );
+    }
+
+    async navigate(pagePath) {
+        await this.page.goto(pagePath, {
+            waitUntil: 'domcontentloaded'
+        });
+
+        await this.cookieConsent.acceptAllCookies();
+    }
+
+    async verifyHomePageNavigation(
+        expectedTitle,
+        expectedBreadcrumb
+    ) {
+        await expect(this.page).toHaveURL(/\/$/);
+
+        await expect(this.page).toHaveTitle(
+            new RegExp(expectedTitle, 'i')
+        );
+
+        await expect(this.breadcrumb).toBeVisible();
+
+        await expect(this.breadcrumb).toContainText(
+            expectedBreadcrumb
+        );
+    }
+
+    async verifyHeroSection(expectedHeadings) {
+        await expect(this.heroSection).toBeVisible();
+
+        await expect(this.heroHeading).toHaveText(
+            expectedHeadings.hero
+        );
+
+        await expect(this.heroSubtitle).toHaveText(
+            expectedHeadings.heroSubtitle
+        );
+
+        await expect(this.heroImage).toBeVisible();
+    }
+
+    async verifyIntroductionSection(expectedHeading) {
+        await expect(
+            this.introductionHeading
+        ).toBeVisible();
+
+        await expect(
+            this.introductionHeading
+        ).toHaveText(expectedHeading);
+    }
+
+    async verifyBrandLogos(minimumLogoCount) {
+        await this.brandLogoSection.scrollIntoViewIfNeeded();
+
+        await expect(
+            this.brandLogoSection
+        ).toBeVisible();
+
+        const totalLogos = await this.brandLogos.count();
+
+        expect(
+            totalLogos,
+            `Expected at least ${minimumLogoCount} brand logo`
+        ).toBeGreaterThanOrEqual(minimumLogoCount);
+
+        for (
+            let index = 0;
+            index < totalLogos;
+            index += 1
+        ) {
+            await expect(
+                this.brandLogos.nth(index)
+            ).toBeVisible();
+        }
+    }
+
+    async verifyViewAllProductsButton() {
+        await expect(
+            this.viewAllProductsButton
+        ).toBeVisible();
+
+        await expect(
+            this.viewAllProductsButton
+        ).toBeEnabled();
+
+        await expect(
+            this.viewAllProductsButton
+        ).toHaveAttribute('href', '/products');
+    }
+
+    async navigateToProducts() {
+        await this.cookieConsent.acceptAllCookies();
+
+        await this.viewAllProductsButton.click();
+    }
+
+    async verifyBusinessLoungeSection(
+        expectedHeading
+    ) {
+        await this.businessLoungeHeading
+            .scrollIntoViewIfNeeded();
+
+        await expect(
+            this.businessLoungeHeading
+        ).toBeVisible();
+
+        await expect(
+            this.businessLoungeHeading
+        ).toHaveText(expectedHeading);
+
+        await expect(
+            this.businessLoungeImage
+        ).toBeVisible();
+
+        await expect(
+            this.prepareForTakeOffButton
+        ).toBeVisible();
+
+        await expect(
+            this.prepareForTakeOffButton
+        ).toHaveAttribute(
+            'href',
+            '/user/login'
+        );
+    }
+
+    async verifyPrepareForTakeOffButton() {
+        await this.prepareForTakeOffButton
+            .scrollIntoViewIfNeeded();
+
+        await expect(
+            this.prepareForTakeOffButton
+        ).toBeVisible();
+
+        await expect(
+            this.prepareForTakeOffButton
+        ).toBeEnabled();
+
+        await expect(
+            this.prepareForTakeOffButton
+        ).toHaveAttribute(
+            'href',
+            '/user/login'
+        );
+    }
+
+    async navigateToUserLogin() {
+        await this.cookieConsent.acceptAllCookies();
+
+        await this.prepareForTakeOffButton.click();
+    }
+}
+
+module.exports = { HomePage };
+
+
+===== B2BLoginPage.js =====
+// const { expect } = require('@playwright/test');
+
+// const {
+//     HeaderComponent
+// } = require('./components/HeaderComponent');
+
+// const {
+//     FooterComponent
+// } = require('./components/FooterComponent');
+
+// const {
+//     CookieConsentComponent
+// } = require('./components/CookieConsentComponent');
+
+// class B2BLoginPage {
+//     constructor(page) {
+//         this.page = page;
+
+//         // Reusable public website components
+//         this.header = new HeaderComponent(page);
+//         this.footer = new FooterComponent(page);
+
+//         this.cookieConsent =
+//             new CookieConsentComponent(page);
+
+//         /*
+//          * B2B Login dialog.
+//          * The modal opens using an AJAX request over the
+//          * existing public website page.
+//          */
+//         this.loginDialog = page.locator(
+//             'div.ui-dialog[role="dialog"]'
+//         );
+
+//         this.modalContent =
+//             this.loginDialog.locator(
+//                 '#drupal-modal'
+//             );
+
+//         this.dialogTitle =
+//             this.loginDialog.locator(
+//                 'h1.ui-dialog-title'
+//             );
+
+//         this.closeButton =
+//             this.loginDialog.locator(
+//                 'button.ui-dialog-titlebar-close'
+//             );
+
+//         this.welcomeHeading =
+//             this.modalContent.getByRole(
+//                 'heading',
+//                 {
+//                     name: 'Welcome back',
+//                     exact: true
+//                 }
+//             );
+
+//         this.signInInstruction =
+//             this.modalContent.getByRole(
+//                 'heading',
+//                 {
+//                     name:
+//                         'Please use your credentials to sign in below',
+//                     exact: true
+//                 }
+//             );
+
+//         // B2B Login form
+//         this.loginForm =
+//             this.modalContent.locator(
+//                 'form#custom-popup-login-form'
+//             );
+
+//         /*
+//          * Input IDs contain dynamic suffixes.
+//          * Stable name and Drupal selector attributes are used.
+//          */
+//         this.usernameInput =
+//             this.loginForm.locator(
+//                 'input[name="name"]' +
+//                 '[data-drupal-selector="edit-name"]'
+//             );
+
+//         this.passwordInput =
+//             this.loginForm.locator(
+//                 'input[name="pass"]' +
+//                 '[data-drupal-selector="edit-pass"]'
+//             );
+
+//         this.usernameLabel =
+//             this.loginForm.locator(
+//                 'label[for^="edit-name--"]'
+//             );
+
+//         this.passwordLabel =
+//             this.loginForm.locator(
+//                 'label[for^="edit-pass--"]'
+//             );
+
+//         /*
+//          * This description exists in the DOM but may be hidden
+//          * by the website's CSS.
+//          */
+//         this.usernameDescription =
+//             this.loginForm.locator(
+//                 'small[id^="edit-name--"]'
+//             );
+
+//         this.forgotPasswordLink =
+//             this.loginForm.getByRole(
+//                 'link',
+//                 {
+//                     name:
+//                         'Forgot your password?',
+//                     exact: true
+//                 }
+//             );
+
+//         this.loginButton =
+//             this.loginForm.getByRole(
+//                 'button',
+//                 {
+//                     name: 'Login',
+//                     exact: true
+//                 }
+//             );
+
+//         // jQuery UI modal overlay
+//         this.dialogOverlay = page.locator(
+//             '.ui-widget-overlay'
+//         );
+
+//         // Optional authentication-error containers
+//         this.loginErrorMessage = page.locator(
+//             [
+//                 '.messages--error',
+//                 '.alert-danger',
+//                 '.form-item--error-message',
+//                 '[role="alert"]'
+//             ].join(', ')
+//         ).first();
+//     }
+
+//     async navigate(pagePath) {
+//         await this.page.goto(pagePath, {
+//             waitUntil: 'domcontentloaded'
+//         });
+
+//         await this.cookieConsent
+//             .ensureCookiePopupIsClosed();
+
+//         await expect(this.page).toHaveURL(
+//             url => url.pathname === pagePath
+//         );
+//     }
+
+//     async openLoginModal() {
+//         await this.cookieConsent
+//             .ensureCookiePopupIsClosed();
+
+//         await this.header.openB2BLogin();
+
+//         await expect(
+//             this.loginDialog,
+//             'B2B Login modal dialog should be visible'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             this.dialogOverlay,
+//             'B2B Login modal overlay should be visible'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             this.loginForm,
+//             'B2B Login form should be displayed'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             this.dialogTitle,
+//             'B2B Login modal title should exist in the DOM'
+//         ).toBeAttached({
+//             timeout: 15000
+//         });
+//     }
+
+//     async verifyModalDisplayed(
+//         expectedModal
+//     ) {
+//         await expect(
+//             this.loginDialog
+//         ).toBeVisible();
+
+//         await expect(
+//             this.modalContent
+//         ).toBeVisible();
+
+//         await expect(
+//             this.dialogTitle
+//         ).toBeAttached();
+
+//         await expect(
+//             this.dialogTitle
+//         ).toHaveText(
+//             expectedModal.dialogTitle
+//         );
+
+//         await expect(
+//             this.welcomeHeading
+//         ).toBeVisible();
+
+//         await expect(
+//             this.welcomeHeading
+//         ).toHaveText(
+//             expectedModal.heading
+//         );
+
+//         await expect(
+//             this.signInInstruction
+//         ).toBeVisible();
+
+//         await expect(
+//             this.signInInstruction
+//         ).toHaveText(
+//             expectedModal.instruction
+//         );
+//     }
+
+//     async verifyUsernameField(
+//         expectedFields,
+//         expectedValidation
+//     ) {
+//         await expect(
+//             this.usernameLabel
+//         ).toBeVisible();
+
+//         await expect(
+//             this.usernameLabel
+//         ).toContainText(
+//             expectedFields.usernameLabel
+//         );
+
+//         await expect(
+//             this.usernameInput
+//         ).toBeVisible();
+
+//         await expect(
+//             this.usernameInput
+//         ).toBeEnabled();
+
+//         await expect(
+//             this.usernameInput
+//         ).toHaveAttribute(
+//             'type',
+//             'text'
+//         );
+
+//         await expect(
+//             this.usernameInput
+//         ).toHaveAttribute(
+//             'name',
+//             'name'
+//         );
+
+//         await expect(
+//             this.usernameInput
+//         ).toHaveAttribute(
+//             'autocomplete',
+//             'username'
+//         );
+
+//         await expect(
+//             this.usernameInput
+//         ).toHaveAttribute(
+//             'maxlength',
+//             expectedValidation
+//                 .usernameMaximumLength
+//         );
+
+//         if (
+//             expectedValidation
+//                 .usernameRequired
+//         ) {
+//             await expect(
+//                 this.usernameInput
+//             ).toHaveAttribute(
+//                 'required',
+//                 'required'
+//             );
+//         }
+
+//         /*
+//          * The helper description is hidden by CSS.
+//          * Validate that it exists and contains the expected text.
+//          */
+//         await expect(
+//             this.usernameDescription
+//         ).toBeAttached();
+
+//         await expect(
+//             this.usernameDescription
+//         ).toContainText(
+//             expectedFields
+//                 .usernameDescription
+//         );
+
+//         const descriptionId =
+//             await this.usernameDescription
+//                 .getAttribute('id');
+
+//         expect(
+//             descriptionId,
+//             'Username description should have an ID'
+//         ).toBeTruthy();
+
+//         await expect(
+//             this.usernameInput
+//         ).toHaveAttribute(
+//             'aria-describedby',
+//             descriptionId
+//         );
+//     }
+
+//     async verifyPasswordField(
+//         expectedFields,
+//         expectedValidation
+//     ) {
+//         await expect(
+//             this.passwordLabel
+//         ).toBeVisible();
+
+//         await expect(
+//             this.passwordLabel
+//         ).toContainText(
+//             expectedFields.passwordLabel
+//         );
+
+//         await expect(
+//             this.passwordInput
+//         ).toBeVisible();
+
+//         await expect(
+//             this.passwordInput
+//         ).toBeEnabled();
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveAttribute(
+//             'type',
+//             expectedValidation
+//                 .passwordInputType
+//         );
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveAttribute(
+//             'name',
+//             'pass'
+//         );
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveAttribute(
+//             'maxlength',
+//             expectedValidation
+//                 .passwordMaximumLength
+//         );
+
+//         if (
+//             expectedValidation
+//                 .passwordRequired
+//         ) {
+//             await expect(
+//                 this.passwordInput
+//             ).toHaveAttribute(
+//                 'required',
+//                 'required'
+//             );
+//         }
+//     }
+
+//     async verifyFieldsInitiallyEmpty() {
+//         await expect(
+//             this.usernameInput
+//         ).toHaveValue('');
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveValue('');
+//     }
+
+//     async verifyForgotPasswordLink(
+//         expectedText,
+//         expectedPath
+//     ) {
+//         await expect(
+//             this.forgotPasswordLink
+//         ).toBeVisible();
+
+//         await expect(
+//             this.forgotPasswordLink
+//         ).toHaveText(expectedText);
+
+//         await expect(
+//             this.forgotPasswordLink
+//         ).toHaveAttribute(
+//             'href',
+//             expectedPath
+//         );
+//     }
+
+//     async verifyLoginButton(
+//         expectedButtonText
+//     ) {
+//         await expect(
+//             this.loginButton
+//         ).toBeVisible();
+
+//         await expect(
+//             this.loginButton
+//         ).toBeEnabled();
+
+//         await expect(
+//             this.loginButton
+//         ).toHaveText(
+//             expectedButtonText
+//         );
+
+//         await expect(
+//             this.loginButton
+//         ).toHaveAttribute(
+//             'type',
+//             'submit'
+//         );
+//     }
+
+//     async verifyCloseButton() {
+//         await expect(
+//             this.closeButton
+//         ).toBeVisible();
+
+//         await expect(
+//             this.closeButton
+//         ).toBeEnabled();
+
+//         await expect(
+//             this.closeButton
+//         ).toHaveAttribute(
+//             'type',
+//             'button'
+//         );
+//     }
+
+//     async fillUsername(username) {
+//         expect(
+//             username,
+//             'B2B username should be loaded from .env'
+//         ).toBeTruthy();
+
+//         await this.usernameInput.fill(
+//             username
+//         );
+
+//         /*
+//          * Confirm the value without printing the username
+//          * in terminal output or Excel remarks.
+//          */
+//         const usernameLength =
+//             await this.usernameInput.evaluate(
+//                 inputElement =>
+//                     inputElement.value.length
+//             );
+
+//         expect(
+//             usernameLength,
+//             'B2B username field should contain a value'
+//         ).toBeGreaterThan(0);
+//     }
+
+//     async fillPassword(password) {
+//         expect(
+//             password,
+//             'B2B password should be loaded from .env'
+//         ).toBeTruthy();
+
+//         await this.passwordInput.fill(
+//             password
+//         );
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveAttribute(
+//             'type',
+//             'password'
+//         );
+
+//         /*
+//          * Confirm only the password length.
+//          * The password value is never printed or reported.
+//          */
+//         const passwordLength =
+//             await this.passwordInput.evaluate(
+//                 inputElement =>
+//                     inputElement.value.length
+//             );
+
+//         expect(
+//             passwordLength,
+//             'B2B password field should contain a value'
+//         ).toBeGreaterThan(0);
+//     }
+
+//     async fillCredentials(
+//         username,
+//         password
+//     ) {
+//         await this.fillUsername(username);
+
+//         await this.fillPassword(password);
+//     }
+
+//     async verifyCredentialsEntered() {
+//         const usernameLength =
+//             await this.usernameInput.evaluate(
+//                 inputElement =>
+//                     inputElement.value.length
+//             );
+
+//         const passwordLength =
+//             await this.passwordInput.evaluate(
+//                 inputElement =>
+//                     inputElement.value.length
+//             );
+
+//         expect(
+//             usernameLength,
+//             'B2B username field should contain a value'
+//         ).toBeGreaterThan(0);
+
+//         expect(
+//             passwordLength,
+//             'B2B password field should contain a value'
+//         ).toBeGreaterThan(0);
+
+//         await expect(
+//             this.passwordInput
+//         ).toHaveAttribute(
+//             'type',
+//             'password'
+//         );
+//     }
+
+//     async submitLogin(
+//         expectedDashboardPath
+//     ) {
+//         await expect(
+//             this.loginButton
+//         ).toBeVisible();
+
+//         await expect(
+//             this.loginButton
+//         ).toBeEnabled();
+
+//         await this.loginButton.click();
+
+//         /*
+//          * A valid login redirects to the authenticated Dashboard.
+//          * Query parameters are allowed if the application adds them.
+//          */
+//         await expect(this.page).toHaveURL(
+//             url =>
+//                 url.pathname ===
+//                 expectedDashboardPath,
+//             {
+//                 timeout: 30000
+//             }
+//         );
+
+//         await this.page.waitForLoadState(
+//             'domcontentloaded'
+//         );
+//     }
+
+//     async login(
+//         username,
+//         password,
+//         expectedDashboardPath
+//     ) {
+//         await this.fillCredentials(
+//             username,
+//             password
+//         );
+
+//         await this.verifyCredentialsEntered();
+
+//         await this.submitLogin(
+//             expectedDashboardPath
+//         );
+//     }
+
+//     async verifyLoginErrorDisplayed() {
+//         await expect(
+//             this.loginErrorMessage,
+//             'A B2B Login error message should be displayed'
+//         ).toBeVisible();
+//     }
+
+//     async openForgotPasswordPage(
+//         expectedPath
+//     ) {
+//         await expect(
+//             this.forgotPasswordLink
+//         ).toBeVisible();
+
+//         await this.forgotPasswordLink.click();
+
+//         await this.page.waitForLoadState(
+//             'domcontentloaded'
+//         );
+
+//         await expect(this.page).toHaveURL(
+//             url => url.pathname === expectedPath
+//         );
+//     }
+
+//     async closeLoginModal() {
+//         await expect(
+//             this.closeButton
+//         ).toBeVisible();
+
+//         await this.closeButton.click();
+
+//         await expect(
+//             this.loginDialog,
+//             'B2B Login modal should close'
+//         ).toBeHidden({
+//             timeout: 10000
+//         });
+//     }
+
+//     async verifyModalClosed() {
+//         await expect(
+//             this.loginDialog
+//         ).toBeHidden();
+
+//         const overlayCount =
+//             await this.dialogOverlay.count();
+
+//         if (overlayCount === 0) {
+//             return;
+//         }
+
+//         const overlayVisible =
+//             await this.dialogOverlay
+//                 .isVisible()
+//                 .catch(() => false);
+
+//         if (overlayVisible) {
+//             await expect(
+//                 this.dialogOverlay
+//             ).toBeHidden({
+//                 timeout: 10000
+//             });
+//         }
+//     }
+
+//         async verifyCurrentPagePath(expectedPath) {
+//         await expect(this.page).toHaveURL(
+//             url => url.pathname === expectedPath
+//         );
+//     }
+
+//     async openLoginModal() {
+//         await this.cookieConsent
+//             .ensureCookiePopupIsClosed();
+
+//         const loginLink =
+//             this.page
+//                 .locator('#header')
+//                 .locator(
+//                     'a.nav-link--login-modal'
+//                 )
+//                 .first();
+
+//         await expect(
+//             loginLink,
+//             'B2B Log in link should be visible'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             loginLink,
+//             'B2B Log in link should be enabled'
+//         ).toBeEnabled();
+
+//         await loginLink.click({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             this.loginDialog,
+//             'B2B Login modal should open'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+
+//         await expect(
+//             this.loginForm,
+//             'B2B Login form should be displayed'
+//         ).toBeVisible({
+//             timeout: 15000
+//         });
+//     }
+// }
+
+// module.exports = { B2BLoginPage };
+
+const { expect } = require('@playwright/test');
+
+class B2BLoginPage {
+    constructor(page) {
+        this.page = page;
+
+        // Public page
+        this.siteHeader = page.locator('#header');
+
+        this.b2bLoginLink = this.siteHeader
+            .locator('a.nav-link--login-modal')
+            .first();
+
+        // Drupal Login modal
+        this.loginDialog = page.locator(
+            'div.ui-dialog[role="dialog"]'
+        );
+
+        this.modalContent = this.loginDialog.locator(
+            '#drupal-modal'
+        );
+
+        this.loginForm = this.modalContent.locator(
+            'form#custom-popup-login-form'
+        );
+
+        // Login form controls
+        this.usernameInput = this.loginForm.locator(
+            'input[name="name"], input[type="text"]'
+        ).first();
+
+        this.passwordInput = this.loginForm.locator(
+            'input[name="pass"], input[type="password"]'
+        ).first();
+
+        this.loginButton = this.loginForm.getByRole(
+            'button',
+            {
+                name: 'Login',
+                exact: true
+            }
+        );
+
+        this.forgotPasswordLink = this.loginForm.getByRole(
+            'link',
+            {
+                name: /forgot password/i
+            }
+        );
+
+        this.modalCloseButton = this.loginDialog.locator(
+            '.ui-dialog-titlebar-close'
+        );
+
+        // OneTrust Cookie Banner
+        this.oneTrustContainer = page.locator(
+            '#onetrust-consent-sdk'
+        );
+
+        this.cookieBanner = page.locator(
+            '#onetrust-banner-sdk'
+        );
+
+        this.acceptAllCookiesButton = page.locator(
+            '#onetrust-accept-btn-handler'
+        );
+
+        this.rejectAllCookiesButton = page.locator(
+            '#onetrust-reject-all-handler'
+        );
+
+        // OneTrust Preference Center
+        this.preferenceCenter = page.locator(
+            '#onetrust-pc-sdk'
+        );
+
+        this.acceptRecommendedButton = page.locator(
+            '#accept-recommended-btn-handler'
+        );
+
+        this.savePreferencesButton = page.locator(
+            '.save-preference-btn-handler'
+        );
+
+        this.closePreferencesButton = page.locator(
+            '#close-pc-btn-handler'
+        );
+
+        this.oneTrustDarkOverlay = page.locator(
+            '.onetrust-pc-dark-filter'
+        );
+
+        // Authenticated Dashboard
+        this.dashboardContent = page.locator(
+            '#block-retailx-dashboardmenu'
+        );
+    }
+
+    async isVisible(locator, timeout = 1500) {
+        return locator.isVisible({
+            timeout
+        }).catch(() => false);
+    }
+
+    async clickIfVisible(locator) {
+        const visible = await this.isVisible(
+            locator
+        );
+
+        if (!visible) {
+            return false;
+        }
+
+        await locator.click({
+            force: true,
+            timeout: 5000
+        }).catch(() => {});
+
+        return true;
+    }
+
+    async closeOneTrustPreferenceCenter() {
+        const preferenceCenterVisible =
+            await this.isVisible(
+                this.preferenceCenter
+            );
+
+        const overlayVisible =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (
+            !preferenceCenterVisible &&
+            !overlayVisible
+        ) {
+            return;
+        }
+
+        const acceptedRecommended =
+            await this.clickIfVisible(
+                this.acceptRecommendedButton
+            );
+
+        if (!acceptedRecommended) {
+            const savedPreferences =
+                await this.clickIfVisible(
+                    this.savePreferencesButton
+                );
+
+            if (!savedPreferences) {
+                await this.clickIfVisible(
+                    this.closePreferencesButton
+                );
+            }
+        }
+
+        await this.preferenceCenter.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+    }
+
+    async closeOneTrustCookieBanner() {
+        const bannerVisible =
+            await this.isVisible(
+                this.cookieBanner
+            );
+
+        if (!bannerVisible) {
+            return;
+        }
+
+        const accepted =
+            await this.clickIfVisible(
+                this.acceptAllCookiesButton
+            );
+
+        if (!accepted) {
+            await this.clickIfVisible(
+                this.rejectAllCookiesButton
+            );
+        }
+
+        await this.cookieBanner.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+    }
+
+    async ensureOneTrustIsClosed() {
+        await this.closeOneTrustPreferenceCenter();
+
+        await this.closeOneTrustCookieBanner();
+
+        // Recheck because OneTrust can reopen the Preference Center.
+        await this.closeOneTrustPreferenceCenter();
+
+        const overlayVisible =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (overlayVisible) {
+            await this.clickIfVisible(
+                this.closePreferencesButton
+            );
+
+            await this.clickIfVisible(
+                this.savePreferencesButton
+            );
+
+            await this.clickIfVisible(
+                this.acceptRecommendedButton
+            );
+        }
+
+        await this.oneTrustDarkOverlay.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+    }
+
+    async navigate(pagePath = '/') {
+        await this.page.goto(pagePath, {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
+
+        await expect(
+            this.siteHeader,
+            'Site Header should be displayed'
+        ).toBeVisible({
+            timeout: 30000
+        });
+
+        await this.ensureOneTrustIsClosed();
+    }
+
+    async openLoginModal() {
+        await this.ensureOneTrustIsClosed();
+
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should be visible'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should be enabled'
+        ).toBeEnabled();
+
+        const overlayBeforeModal =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (overlayBeforeModal) {
+            await this.ensureOneTrustIsClosed();
+        }
+
+        await this.b2bLoginLink.click({
+            timeout: 15000,
+            force: true
+        });
+
+        await expect(
+            this.loginDialog,
+            'B2B Login dialog should open'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.loginForm,
+            'B2B Login form should be displayed'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        // OneTrust can reappear after Drupal opens the modal.
+        await this.ensureOneTrustIsClosed();
+    }
+
+    async verifyLoginModal() {
+        await expect(
+            this.loginDialog
+        ).toBeVisible();
+
+        await expect(
+            this.loginForm
+        ).toBeVisible();
+
+        await expect(
+            this.usernameInput
+        ).toBeVisible();
+
+        await expect(
+            this.passwordInput
+        ).toBeVisible();
+
+        await expect(
+            this.loginButton
+        ).toBeVisible();
+
+        await expect(
+            this.modalCloseButton
+        ).toBeVisible();
+    }
+
+    async verifyFieldsInitiallyEmpty() {
+        await expect(
+            this.usernameInput
+        ).toHaveValue('');
+
+        await expect(
+            this.passwordInput
+        ).toHaveValue('');
+    }
+
+    async verifyForgotPasswordLink() {
+        await expect(
+            this.forgotPasswordLink
+        ).toBeVisible();
+
+        await expect(
+            this.forgotPasswordLink
+        ).toHaveAttribute(
+            'href',
+            /password|forgot/i
+        );
+    }
+
+    async fillCredentials(
+        username,
+        password
+    ) {
+        expect(
+            username,
+            'B2B username should be provided'
+        ).toBeTruthy();
+
+        expect(
+            password,
+            'B2B password should be provided'
+        ).toBeTruthy();
+
+        await expect(
+            this.usernameInput
+        ).toBeVisible();
+
+        await expect(
+            this.passwordInput
+        ).toBeVisible();
+
+        await this.usernameInput.fill(
+            username
+        );
+
+        await this.passwordInput.fill(
+            password
+        );
+    }
+
+    async verifyCredentialsEntered() {
+        const usernameValue =
+            await this.usernameInput.inputValue();
+
+        const passwordValue =
+            await this.passwordInput.inputValue();
+
+        expect(
+            usernameValue.length,
+            'Username field should contain a value'
+        ).toBeGreaterThan(0);
+
+        expect(
+            passwordValue.length,
+            'Password field should contain a value'
+        ).toBeGreaterThan(0);
+
+        await expect(
+            this.passwordInput
+        ).toHaveAttribute(
+            'type',
+            'password'
+        );
+    }
+
+    async submitLogin(
+        expectedDashboardPath = '/dashboard'
+    ) {
+        // OneTrust can reappear after credentials are entered.
+        await this.ensureOneTrustIsClosed();
+
+        await expect(
+            this.loginButton,
+            'B2B Login button should be visible'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.loginButton,
+            'B2B Login button should be enabled'
+        ).toBeEnabled();
+
+        const overlayBeforeSubmit =
+            await this.isVisible(
+                this.oneTrustDarkOverlay
+            );
+
+        if (overlayBeforeSubmit) {
+            await this.ensureOneTrustIsClosed();
+        }
+
+        const navigationPromise =
+            this.page.waitForURL(
+                url =>
+                    url.pathname ===
+                    expectedDashboardPath,
+                {
+                    timeout: 30000
+                }
+            );
+
+        /*
+         * force:true is intentional here.
+         * The button is already verified as visible and enabled.
+         * This prevents a delayed OneTrust backdrop from intercepting
+         * the Login click after the final overlay check.
+         */
+        await this.loginButton.click({
+            timeout: 15000,
+            force: true
+        });
+
+        await navigationPromise;
+
+        await expect(this.page).toHaveURL(
+            url =>
+                url.pathname ===
+                expectedDashboardPath
+        );
+
+        await expect(
+            this.loginDialog
+        ).toBeHidden({
+            timeout: 15000
+        });
+
+        await expect(
+            this.dashboardContent,
+            'Authenticated Dashboard navigation should be displayed'
+        ).toBeVisible({
+            timeout: 30000
+        });
+    }
+
+    async closeLoginModal() {
+        await expect(
+            this.modalCloseButton
+        ).toBeVisible();
+
+        await this.modalCloseButton.click({
+            force: true
+        });
+
+        await expect(
+            this.loginDialog
+        ).toBeHidden({
+            timeout: 15000
+        });
+    }
+}
+
+module.exports = {
+    B2BLoginPage
+};
+
+===== B2BCatalogPage.js =====
+const { expect } = require('@playwright/test');
+
+class B2BCatalogPage {
+    constructor(page) {
+        this.page = page;
+
+        this.catalogView = page.locator(
+            '.view-catalog-pdh-solr'
+        );
+
+        this.heading = this.catalogView.getByRole(
+            'heading',
+            {
+                name: 'Products',
+                level: 1,
+                exact: true
+            }
+        );
+
+        this.breadcrumbItems = page.locator(
+            'nav[aria-label="breadcrumb"] .breadcrumb-item'
+        );
+
+        this.dashboardMenu = page.locator(
+            '#block-retailx-dashboardmenu'
+        );
+
+        this.productsTab = this.dashboardMenu.getByRole(
+            'link',
+            {
+                name: 'Products',
+                exact: true
+            }
+        );
+
+        this.filterForm = page.locator(
+            '#views-exposed-form-catalog-pdh-solr-page-1'
+        );
+
+        this.brandSelect = this.filterForm.locator(
+            '#edit-field-pdh-categories'
+        );
+
+        this.searchInput = this.filterForm.locator(
+            '#edit-search-api-fulltext'
+        );
+
+        this.sortSelect = this.filterForm.locator(
+            '#edit-sort-bef-combine'
+        );
+
+        this.productSummary = this.catalogView.locator(
+            '.view-header'
+        );
+
+        this.brandHeadings = this.catalogView.locator(
+            'h3.section-title'
+        );
+
+        this.productCards = this.catalogView.locator(
+            'article.dsu-product.catalog-pdh-product-teaser'
+        );
+
+        this.productCheckboxes = page.locator(
+            'input.js-vbo-checkbox'
+        );
+
+        this.selectAllCheckbox = page.locator(
+            '#edit-select-all'
+        );
+
+        this.selectAllLabel = page.locator(
+            'label[for="edit-select-all"]'
+        );
+
+        this.selectedCount = this.selectAllLabel.locator(
+            'strong'
+        );
+
+        this.downloadSelectedButton = page.locator(
+            'button[data-action-id="vbo_nitr_pdh_bulk_assets_download"]'
+        );
+
+        this.downloadAllLink = page.locator(
+            'a[href="/catalog/download-xlsx"]'
+        );
+
+        this.footer = page.locator(
+            'footer.site-footer'
+        );
+
+        this.logoutLink = this.footer.getByRole(
+            'link',
+            {
+                name: 'Log out',
+                exact: true
+            }
+        );
+    }
+
+    async openCatalog(expectedPath) {
+        await this.page.goto(expectedPath, {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
+
+        await expect(
+            this.catalogView
+        ).toBeVisible({
+            timeout: 30000
+        });
+    }
+
+    async verifyPage(expectedTitle, expectedPath) {
+        await expect(this.page).toHaveURL(
+            url => url.pathname === expectedPath
+        );
+
+        await expect(this.page).toHaveTitle(
+            expectedTitle
+        );
+
+        await expect(this.heading).toBeVisible();
+
+        await expect(this.heading).toHaveText(
+            'Products'
+        );
+    }
+
+    async verifyBreadcrumb(expectedItems) {
+        await expect(
+            this.breadcrumbItems
+        ).toHaveText(expectedItems);
+    }
+
+    async verifyDashboardNavigation(
+        expectedNavigation
+    ) {
+        await expect(
+            this.dashboardMenu
+        ).toBeVisible();
+
+        for (const item of expectedNavigation) {
+            const link = this.dashboardMenu.getByRole(
+                'link',
+                {
+                    name: item.name,
+                    exact: true
+                }
+            );
+
+            await expect(link).toBeVisible();
+
+            await expect(link).toHaveAttribute(
+                'href',
+                item.path
+            );
+        }
+    }
+
+    async verifyActiveProductsTab() {
+        await expect(
+            this.productsTab
+        ).toHaveClass(/is-active/);
+
+        await expect(
+            this.productsTab
+        ).toHaveAttribute(
+            'aria-current',
+            'page'
+        );
+    }
+
+    async verifyFilters(
+        expectedFilters,
+        expectedBrands
+    ) {
+        await expect(
+            this.brandSelect
+        ).toBeVisible();
+
+        await expect(
+            this.brandSelect
+        ).toHaveValue(
+            expectedFilters.brandDefaultValue
+        );
+
+        const brandOptions = await this.brandSelect
+            .locator('option')
+            .allTextContents();
+
+        expect(brandOptions).toEqual(
+            expect.arrayContaining([
+                expectedFilters.brandDefaultText,
+                ...expectedBrands
+            ])
+        );
+
+        await expect(
+            this.searchInput
+        ).toBeVisible();
+
+        await expect(
+            this.searchInput
+        ).toHaveAttribute(
+            'placeholder',
+            expectedFilters.searchPlaceholder
+        );
+
+        await expect(
+            this.searchInput
+        ).toHaveAttribute(
+            'maxlength',
+            expectedFilters.searchMaximumLength
+        );
+
+        await expect(
+            this.sortSelect
+        ).toBeVisible();
+
+        await expect(
+            this.sortSelect
+        ).toHaveValue(
+            expectedFilters.sortDefaultValue
+        );
+
+        await expect(
+            this.sortSelect.locator('option')
+        ).toHaveText(
+            expectedFilters.sortOptions
+        );
+    }
+
+    async verifyProductSummary(expectedSummary) {
+        await expect(
+            this.productSummary
+        ).toContainText(expectedSummary.text);
+
+        await expect(
+            this.productCards
+        ).toHaveCount(expectedSummary.expectedTotal);
+
+        await expect(
+            this.productCheckboxes
+        ).toHaveCount(expectedSummary.expectedTotal);
+    }
+
+    async verifyBrandSections(expectedBrands) {
+        await expect(
+            this.brandHeadings
+        ).toHaveText(expectedBrands);
+    }
+
+    async verifyEveryProductCard(expectedTotal) {
+        const count = await this.productCards.count();
+
+        expect(count).toBe(expectedTotal);
+
+        for (let index = 0; index < count; index += 1) {
+            const card = this.productCards.nth(index);
+
+            const title = card.locator(
+                '.field--name-title'
+            );
+
+            const gtin = card.locator(
+                '.field--name-field-dsu-sku .field__item'
+            );
+
+            const image = card.locator('img');
+
+            const detailsLink = card.getByRole(
+                'link',
+                {
+                    name: 'Details',
+                    exact: true
+                }
+            );
+
+            const downloadLink = card.locator(
+                'a.download-link'
+            );
+
+            await expect(title).not.toBeEmpty();
+
+            await expect(gtin).toHaveText(
+                /^\d+$/
+            );
+
+            await expect(image).toHaveAttribute(
+                'src',
+                /.+/
+            );
+
+            await expect(detailsLink).toHaveAttribute(
+                'href',
+                /^\/catalog\/\d+$/
+            );
+
+            await expect(downloadLink).toHaveAttribute(
+                'href',
+                /^\/catalog-product-download\/\d+$/
+            );
+        }
+    }
+
+    async verifyInitialBulkState(
+        expectedBulkActions
+    ) {
+        await this.selectAllLabel.scrollIntoViewIfNeeded();
+
+        await expect(
+            this.selectAllLabel
+        ).toContainText(
+            expectedBulkActions.selectAllText
+        );
+
+        await expect(
+            this.selectedCount
+        ).toHaveText(
+            expectedBulkActions.initialSelectedText
+        );
+
+        await expect(
+            this.downloadSelectedButton
+        ).toBeVisible();
+
+        await expect(
+            this.downloadSelectedButton
+        ).toBeDisabled();
+
+        await expect(
+            this.downloadAllLink
+        ).toBeVisible();
+
+        await expect(
+            this.downloadAllLink
+        ).toHaveAttribute(
+            'href',
+            expectedBulkActions.downloadAllPath
+        );
+    }
+
+    async toggleCheckboxById(checkboxId, checked) {
+        const checkbox = this.page.locator(`#${checkboxId}`);
+
+        await expect(checkbox).toHaveCount(1);
+
+        const currentState = await checkbox.isChecked();
+        if (currentState !== checked) {
+            await checkbox.click({ force: true });
+        }
+    }
+
+    async selectAndDeselectFirstProduct(
+        expectedBulkActions
+    ) {
+        const firstCheckbox = this.productCheckboxes.first();
+        const firstCheckboxId = await firstCheckbox.getAttribute('id');
+
+        await this.toggleCheckboxById(firstCheckboxId, true);
+
+        await expect(this.selectedCount).toHaveText(
+            expectedBulkActions.oneSelectedText
+        );
+
+        await expect(
+            this.downloadSelectedButton
+        ).toBeEnabled();
+
+        await this.toggleCheckboxById(firstCheckboxId, false);
+
+        await expect(this.selectedCount).toHaveText(
+            expectedBulkActions.initialSelectedText
+        );
+    }
+
+    async verifySelectAll(expectedTotal) {
+        const selectAllId = await this.selectAllCheckbox.getAttribute('id');
+
+        await this.toggleCheckboxById(selectAllId, true);
+
+        await expect(this.selectAllCheckbox).toBeChecked({ timeout: 15000 });
+
+        const checkedCount = await this.page.locator(
+            'input.js-vbo-checkbox:checked'
+        ).count();
+
+        expect(checkedCount).toBe(expectedTotal);
+
+        await expect(this.selectedCount).toHaveText(
+            `${expectedTotal} products selected.`
+        );
+
+        await this.toggleCheckboxById(selectAllId, false);
+
+        await expect(this.selectAllCheckbox).not.toBeChecked({ timeout: 15000 });
+        await expect(this.selectedCount).toHaveText(
+            '0 products selected.'
+        );
+    }
+
+    async verifyDownloadControls(
+        expectedBulkActions
+    ) {
+        await expect(
+            this.downloadSelectedButton
+        ).toBeVisible();
+
+        await expect(
+            this.downloadSelectedButton
+        ).toHaveText(
+            expectedBulkActions.downloadSelectedText
+        );
+
+        await expect(
+            this.downloadSelectedButton
+        ).toBeDisabled();
+
+        await expect(
+            this.downloadAllLink
+        ).toBeVisible();
+
+        await expect(
+            this.downloadAllLink
+        ).toHaveAttribute(
+            'href',
+            expectedBulkActions.downloadAllPath
+        );
+    }
+
+    async verifyFooterAndLogout(
+        expectedLogoutPrefix
+    ) {
+        await expect(this.footer).toBeVisible();
+        await expect(this.logoutLink).toBeVisible();
+
+        const logoutHref = await this.logoutLink.getAttribute(
+            'href'
+        );
+
+        expect(
+            logoutHref,
+            'Logout URL should contain the expected prefix'
+        ).toContain(expectedLogoutPrefix);
+    }
+
+    async logout() {
+        await expect(this.logoutLink).toBeVisible();
+        await this.logoutLink.click();
+        await this.page.waitForLoadState('domcontentloaded');
+    }
+
+    async verifyLoggedOut() {
+        await expect(this.page).toHaveURL(
+            url =>
+                url.pathname === '/' ||
+                url.pathname.startsWith(
+                    '/user/logout'
+                ),
+            {
+                timeout: 30000
+            }
+        );
+    }
+}
+
+module.exports = { B2BCatalogPage };
+
+
+// const { expect } = require('@playwright/test');
+
+// class B2BCatalogPage {
+//     constructor(page) {
+//         this.page = page;
+
+//         this.catalogView = page.locator(
+//             '.view-catalog-pdh-solr'
+//         );
+
+//         this.heading = this.catalogView.getByRole(
+//             'heading',
+//             {
+//                 name: 'Products',
+//                 level: 1,
+//                 exact: true
+//             }
+//         );
+
+//         this.breadcrumbItems = page.locator(
+//             'nav[aria-label="breadcrumb"] .breadcrumb-item'
+//         );
+
+//         this.dashboardMenu = page.locator(
+//             '#block-retailx-dashboardmenu'
+//         );
+
+//         this.productsTab = this.dashboardMenu.getByRole(
+//             'link',
+//             {
+//                 name: 'Products',
+//                 exact: true
+//             }
+//         );
+
+//         this.filterForm = page.locator(
+//             '#views-exposed-form-catalog-pdh-solr-page-1'
+//         );
+
+//         this.brandSelect = this.filterForm.locator(
+//             '#edit-field-pdh-categories'
+//         );
+
+//         this.searchInput = this.filterForm.locator(
+//             '#edit-search-api-fulltext'
+//         );
+
+//         this.sortSelect = this.filterForm.locator(
+//             '#edit-sort-bef-combine'
+//         );
+
+//         this.productSummary = this.catalogView.locator(
+//             '.view-header'
+//         );
+
+//         this.brandHeadings = this.catalogView.locator(
+//             'h3.section-title'
+//         );
+
+//         this.productCards = this.catalogView.locator(
+//             'article.catalog-pdh-product-teaser'
+//         );
+
+//         this.productCheckboxes = page.locator(
+//             'input.js-vbo-checkbox'
+//         );
+
+//         this.selectAllCheckbox = page.locator(
+//             '#edit-select-all'
+//         );
+
+//         this.selectAllLabel = page.locator(
+//             'label[for="edit-select-all"]'
+//         );
+
+//         this.selectedCount = this.selectAllLabel.locator(
+//             'strong'
+//         );
+
+//         this.downloadSelectedButton = page.locator(
+//             'button[data-action-id="vbo_nitr_pdh_bulk_assets_download"]'
+//         );
+
+//         this.downloadAllLink = page.getByRole(
+//             'link',
+//             {
+//                 name: 'Download all products data (XLSX)',
+//                 exact: true
+//             }
+//         );
+
+//         this.footer = page.locator(
+//             'footer.site-footer'
+//         );
+
+//         this.logoutLink = this.footer.getByRole(
+//             'link',
+//             {
+//                 name: 'Log out',
+//                 exact: true
+//             }
+//         );
+//     }
+
+//     async openCatalog(expectedPath) {
+//         await this.page.goto(expectedPath, {
+//             waitUntil: 'domcontentloaded',
+//             timeout: 60000
+//         });
+
+//         await expect(
+//             this.catalogView
+//         ).toBeVisible({
+//             timeout: 30000
+//         });
+//     }
+
+//     async verifyPage(expectedTitle, expectedPath) {
+//         await expect(this.page).toHaveURL(
+//             url => url.pathname === expectedPath
+//         );
+
+//         await expect(this.page).toHaveTitle(
+//             expectedTitle
+//         );
+
+//         await expect(this.heading).toBeVisible();
+
+//         await expect(this.heading).toHaveText(
+//             'Products'
+//         );
+//     }
+
+//     async verifyBreadcrumb(expectedItems) {
+//         await expect(
+//             this.breadcrumbItems
+//         ).toHaveText(expectedItems);
+//     }
+
+//     async verifyDashboardNavigation(
+//         expectedNavigation
+//     ) {
+//         await expect(
+//             this.dashboardMenu
+//         ).toBeVisible();
+
+//         for (const item of expectedNavigation) {
+//             const link = this.dashboardMenu.getByRole(
+//                 'link',
+//                 {
+//                     name: item.name,
+//                     exact: true
+//                 }
+//             );
+
+//             await expect(link).toBeVisible();
+
+//             await expect(link).toHaveAttribute(
+//                 'href',
+//                 item.path
+//             );
+//         }
+//     }
+
+//     async verifyActiveProductsTab() {
+//         await expect(
+//             this.productsTab
+//         ).toHaveClass(/is-active/);
+
+//         await expect(
+//             this.productsTab
+//         ).toHaveAttribute(
+//             'aria-current',
+//             'page'
+//         );
+//     }
+
+//     async verifyFilters(
+//         expectedFilters,
+//         expectedBrands
+//     ) {
+//         await expect(
+//             this.brandSelect
+//         ).toBeVisible();
+
+//         await expect(
+//             this.brandSelect
+//         ).toHaveValue(
+//             expectedFilters.brandDefaultValue
+//         );
+
+//         const brandOptions = await this.brandSelect
+//             .locator('option')
+//             .allTextContents();
+
+//         expect(brandOptions).toEqual(
+//             expect.arrayContaining([
+//                 expectedFilters.brandDefaultText,
+//                 ...expectedBrands
+//             ])
+//         );
+
+//         await expect(
+//             this.searchInput
+//         ).toBeVisible();
+
+//         await expect(
+//             this.searchInput
+//         ).toHaveAttribute(
+//             'placeholder',
+//             expectedFilters.searchPlaceholder
+//         );
+
+//         await expect(
+//             this.searchInput
+//         ).toHaveAttribute(
+//             'maxlength',
+//             expectedFilters.searchMaximumLength
+//         );
+
+//         await expect(
+//             this.sortSelect
+//         ).toBeVisible();
+
+//         await expect(
+//             this.sortSelect
+//         ).toHaveValue(
+//             expectedFilters.sortDefaultValue
+//         );
+
+//         await expect(
+//             this.sortSelect.locator('option')
+//         ).toHaveText(
+//             expectedFilters.sortOptions
+//         );
+//     }
+
+//     async verifyProductSummary(expectedSummary) {
+//         await expect(
+//             this.productSummary
+//         ).toContainText(expectedSummary.text);
+
+//         await expect(
+//             this.productCards
+//         ).toHaveCount(expectedSummary.expectedTotal);
+
+//         await expect(
+//             this.productCheckboxes
+//         ).toHaveCount(expectedSummary.expectedTotal);
+//     }
+
+//     async verifyBrandSections(expectedBrands) {
+//         await expect(
+//             this.brandHeadings
+//         ).toHaveText(expectedBrands);
+//     }
+
+//     async verifyEveryProductCard(expectedTotal) {
+//         const count = await this.productCards.count();
+
+//         expect(count).toBe(expectedTotal);
+
+//         for (let index = 0; index < count; index += 1) {
+//             const card = this.productCards.nth(index);
+
+//             const title = card.locator(
+//                 '.field--name-title'
+//             );
+
+//             const gtin = card.locator(
+//                 '.field--name-field-dsu-sku .field__item'
+//             );
+
+//             const image = card.locator('img');
+
+//             const detailsLink = card.getByRole(
+//                 'link',
+//                 {
+//                     name: 'Details',
+//                     exact: true
+//                 }
+//             );
+
+//             const downloadLink = card.locator(
+//                 'a.download-link'
+//             );
+
+//             await expect(title).not.toBeEmpty();
+
+//             await expect(gtin).toHaveText(
+//                 /^\d+$/
+//             );
+
+//             await expect(image).toHaveAttribute(
+//                 'src',
+//                 /.+/
+//             );
+
+//             await expect(detailsLink).toHaveAttribute(
+//                 'href',
+//                 /^\/catalog\/\d+$/
+//             );
+
+//             await expect(downloadLink).toHaveAttribute(
+//                 'href',
+//                 /^\/catalog-product-download\/\d+$/
+//             );
+//         }
+//     }
+
+//     async verifyInitialBulkState(
+//         expectedBulkActions
+//     ) {
+//         await this.selectAllCheckbox
+//             .scrollIntoViewIfNeeded();
+
+//         await expect(
+//             this.selectAllCheckbox
+//         ).not.toBeChecked();
+
+//         await expect(
+//             this.selectedCount
+//         ).toHaveText(
+//             expectedBulkActions.initialSelectedText
+//         );
+
+//         await expect(
+//             this.downloadSelectedButton
+//         ).toBeDisabled();
+
+//         const checkedCount = await this.productCheckboxes.evaluateAll(
+//             (checkboxes) =>
+//                 checkboxes.filter(
+//                     (checkbox) => checkbox.checked
+//                 ).length
+//         );
+
+//         expect(checkedCount).toBe(0);
+//     }
+
+//     async selectAllProducts() {
+//         await this.selectAllCheckbox.check();
+//     }
+
+//     async deselectAllProducts() {
+//         await this.selectAllCheckbox.uncheck();
+//     }
+
+//     async selectProductByIndex(index) {
+//         await this.productCheckboxes
+//             .nth(index)
+//             .check();
+//     }
+
+//     async verifyAllProductsSelected(
+//         expectedBulkActions,
+//         expectedTotal
+//     ) {
+//         await expect(
+//             this.selectAllCheckbox
+//         ).toBeChecked();
+
+//         const checkedCount = await this.productCheckboxes.evaluateAll(
+//             (checkboxes) =>
+//                 checkboxes.filter(
+//                     (checkbox) => checkbox.checked
+//                 ).length
+//         );
+
+//         expect(checkedCount).toBe(expectedTotal);
+
+//         await expect(
+//             this.selectedCount
+//         ).toHaveText(
+//             expectedBulkActions.allSelectedText(
+//                 expectedTotal
+//             )
+//         );
+
+//         await expect(
+//             this.downloadSelectedButton
+//         ).toBeEnabled();
+//     }
+
+//     async verifyPartialSelection(
+//         expectedBulkActions,
+//         expectedSelectedCount
+//     ) {
+//         await expect(
+//             this.selectAllCheckbox
+//         ).not.toBeChecked();
+
+//         await expect(
+//             this.selectedCount
+//         ).toHaveText(
+//             expectedBulkActions.partialSelectedText(
+//                 expectedSelectedCount
+//             )
+//         );
+
+//         await expect(
+//             this.downloadSelectedButton
+//         ).toBeEnabled();
+//     }
+
+//     async verifyDownloadAllLink(expectedHref) {
+//         await expect(
+//             this.downloadAllLink
+//         ).toBeVisible();
+
+//         await expect(
+//             this.downloadAllLink
+//         ).toHaveAttribute(
+//             'href',
+//             expectedHref
+//         );
+//     }
+
+//     async verifyFooterLinks(expectedFooterLinks) {
+//         await expect(this.footer).toBeVisible();
+
+//         for (const item of expectedFooterLinks) {
+//             const link = this.footer.getByRole(
+//                 'link',
+//                 {
+//                     name: item.name,
+//                     exact: true
+//                 }
+//             );
+
+//             await expect(link).toBeVisible();
+
+//             if (item.href) {
+//                 await expect(link).toHaveAttribute(
+//                     'href',
+//                     item.href
+//                 );
+//             }
+//         }
+//     }
+
+//     async logout() {
+//         await this.logoutLink.click();
+
+//         await expect(this.page).toHaveURL(
+//             /\/(user\/login)?$/
+//         );
+//     }
+// }
+
+// module.exports = B2BCatalogPage;
+
+===== homePage.spec.js =====
+// const { test, expect } = require('@playwright/test');
+
+// const { HomePage } = require('../pages/HomePage');
+
+// const homePageData = require(
+//     '../testData/homePageData.json'
+// );
+
+// test.describe(
+//     'NestlÃ© International Travel Retail Home Page',
+//     () => {
+//         test.beforeEach(async ({ page }) => {
+//             const homePage = new HomePage(page);
+
+//             await homePage.navigate(
+//                 homePageData.pagePath
+//             );
+//         });
+
+//         test(
+//             'Navigation to Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.verifyHomePageNavigation(
+//                     homePageData.expectedTitle,
+//                     homePageData.breadcrumb
+//                 );
+//             }
+//         );
+
+//         test(
+//             'NestlÃ© International Travel Retail logo is displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.header
+//                     .verifyLogoDisplayed();
+//             }
+//         );
+
+//         test(
+//             'Products tab is displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await expect(
+//                     homePage.header.productsLink
+//                 ).toBeVisible();
+//             }
+//         );
+
+//         test(
+//             'Who We Are menu is displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await expect(
+//                     homePage.header.whoWeAreMenu
+//                 ).toBeVisible();
+//             }
+//         );
+
+//         test(
+//             'B2B Log In tab is displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await expect(
+//                     homePage.header.b2bLoginLink
+//                 ).toBeVisible();
+//             }
+//         );
+
+//         test(
+//             'Contact Us tab is displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await expect(
+//                     homePage.header.contactUsLink
+//                 ).toBeVisible();
+//             }
+//         );
+
+//         test(
+//             'Search icon is displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.header
+//                     .verifySearchButtonDisplayed();
+//             }
+//         );
+
+//         test(
+//             'Travel with a trusted partner banner is displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.verifyHeroSection(
+//                     homePageData.headings
+//                 );
+//             }
+//         );
+
+//         test(
+//             'Making travel retail fly section is displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage
+//                     .verifyIntroductionSection(
+//                         homePageData.headings
+//                             .introduction
+//                     );
+//             }
+//         );
+
+//         test(
+//             'Brand logos are displayed on Home page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.verifyBrandLogos(
+//                     homePageData.minimumBrandLogoCount
+//                 );
+//             }
+//         );
+
+//         test(
+//             'View all products button is working',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage
+//                     .verifyViewAllProductsButton();
+
+//                 await homePage.navigateToProducts();
+
+//                 await expect(page).toHaveURL(
+//                     new RegExp(
+//                         `${homePageData.paths.products}/?$`
+//                     )
+//                 );
+//             }
+//         );
+
+//         test(
+//             'Travel Retail Business Lounge section is displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage
+//                     .verifyBusinessLoungeSection(
+//                         homePageData.headings
+//                             .businessLounge
+//                     );
+//             }
+//         );
+
+//         test(
+//             'Prepare for take off button is displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage
+//                     .verifyPrepareForTakeOffButton();
+//             }
+//         );
+
+//         test(
+//             'Prepare for take off button navigates to Login page',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.navigateToUserLogin();
+
+//                 await expect(page).toHaveURL(
+//                     new RegExp(
+//                         `${homePageData.paths.userLogin}/?$`
+//                     )
+//                 );
+//             }
+//         );
+
+//         test(
+//             'Footer navigation links are displayed',
+//             async ({ page }) => {
+//                 const homePage = new HomePage(page);
+
+//                 await homePage.footer
+//                     .verifyFooterNavigationDisplayed();
+//             }
+//         );
+//     }
+// );
+
+
+// // test('Basic Playwright test', async ({ page }) => {
+// //     const response = await page.goto('/', {
+// //         waitUntil: 'domcontentloaded',
+// //         timeout: 60000
+// //     });
+
+// //     expect(response).not.toBeNull();
+
+// //     expect(
+// //         response.status(),
+// //         `Website returned HTTP status ${response.status()}`
+// //     ).toBeLessThan(500);
+
+// //     await expect(page).toHaveURL(
+// //         /master-copy-h5hl5dy-fcsle4rj4pg7c\.eu-5\.platformsh\.site/
+// //     );
+// // });
+
+const {
+    test,
+    expect
+} = require('@playwright/test');
+
+const {
+    HomePage
+} = require('../pages/HomePage');
+
+const homePageData = require(
+    '../testData/homePageData.json'
+);
+
+test.describe(
+    'Nestlé International Travel Retail Home Page',
+    () => {
+        test(
+            'Validate all Home page components and navigation',
+            async ({ page }) => {
+                const homePage = new HomePage(page);
+
+                await test.step(
+                    'Navigate to the Home page',
+                    async () => {
+                        await homePage.navigate(
+                            homePageData.pagePath
+                        );
+
+                        await homePage
+                            .verifyHomePageNavigation(
+                                homePageData.expectedTitle,
+                                homePageData.breadcrumb
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify the Nestlé International Travel Retail logo',
+                    async () => {
+                        await homePage.header
+                            .verifyLogoDisplayed();
+                    }
+                );
+
+                await test.step(
+                    'Verify Products tab',
+                    async () => {
+                        await expect(
+                            homePage.header.productsLink
+                        ).toBeVisible();
+                    }
+                );
+
+                await test.step(
+                    'Verify Who We Are menu',
+                    async () => {
+                        await expect(
+                            homePage.header.whoWeAreMenu
+                        ).toBeVisible();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Log In tab',
+                    async () => {
+                        await expect(
+                            homePage.header.b2bLoginLink
+                        ).toBeVisible();
+                    }
+                );
+
+                await test.step(
+                    'Verify Contact Us tab',
+                    async () => {
+                        await expect(
+                            homePage.header.contactUsLink
+                        ).toBeVisible();
+                    }
+                );
+
+                await test.step(
+                    'Verify Search icon',
+                    async () => {
+                        await homePage.header
+                            .verifySearchButtonDisplayed();
+                    }
+                );
+
+                await test.step(
+                    'Verify Travel with a trusted partner banner',
+                    async () => {
+                        await homePage.verifyHeroSection(
+                            homePageData.headings
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Verify Making travel retail fly section',
+                    async () => {
+                        await homePage
+                            .verifyIntroductionSection(
+                                homePageData
+                                    .headings
+                                    .introduction
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify brand logos',
+                    async () => {
+                        await homePage.verifyBrandLogos(
+                            homePageData
+                                .minimumBrandLogoCount
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Verify Travel Retail Business Lounge section',
+                    async () => {
+                        await homePage
+                            .verifyBusinessLoungeSection(
+                                homePageData
+                                    .headings
+                                    .businessLounge
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Prepare for take off button',
+                    async () => {
+                        await homePage
+                            .verifyPrepareForTakeOffButton();
+                    }
+                );
+
+                await test.step(
+                    'Verify Footer navigation links',
+                    async () => {
+                        await homePage.footer
+                            .verifyFooterNavigationDisplayed();
+                    }
+                );
+
+                await test.step(
+                    'Verify View all products button navigation',
+                    async () => {
+                        await homePage
+                            .verifyViewAllProductsButton();
+
+                        await homePage.navigateToProducts();
+
+                        await expect(page).toHaveURL(
+                            new RegExp(
+                                `${homePageData.paths.products}/?$`
+                            )
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Return to the Home page',
+                    async () => {
+                        await homePage.header
+                            .navigateToHome();
+
+                        await expect(page).toHaveURL(
+                            /\/$/
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Verify Prepare for take off navigation',
+                    async () => {
+                        await homePage
+                            .navigateToUserLogin();
+
+                        await expect(page).toHaveURL(
+                            new RegExp(
+                                `${homePageData.paths.userLogin}/?$`
+                            )
+                        );
+                    }
+                );
+            }
+        );
+    }
+);
+
+
+===== b2bLogin.spec.js =====
+const { test } = require('@playwright/test');
+
+require('dotenv').config({
+    quiet: true
+});
+
+const {
+    B2BLoginPage
+} = require('../pages/B2BLoginPage');
+
+const {
+    B2BDashboardPage
+} = require(
+    '../pages/b2b/B2BDashboardPage'
+);
+
+const b2bLoginData = require(
+    '../testData/b2bLoginData.json'
+);
+
+const b2bDashboardData = require(
+    '../testData/b2bDashboardData.json'
+);
+
+test.describe(
+    'NestlÃ© International Travel Retail B2B Authentication',
+    () => {
+        test(
+            'Validate B2B Login, Dashboard and Logout flow',
+            async ({ page }) => {
+                const b2bLoginPage =
+                    new B2BLoginPage(page);
+
+                const b2bDashboardPage =
+                    new B2BDashboardPage(page);
+
+                const b2bUsername =
+                    process.env.B2B_USERNAME;
+
+                const b2bPassword =
+                    process.env.B2B_PASSWORD;
+
+                test.skip(
+                    !b2bUsername ||
+                        !b2bPassword,
+                    'B2B credentials are not configured in .env'
+                );
+
+                await test.step(
+                    'Open Home page as B2B modal background',
+                    async () => {
+                        await b2bLoginPage.navigate(
+                            b2bLoginData
+                                .backgroundPagePath
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Verify public Header before B2B Login',
+                    async () => {
+                        await b2bLoginPage.header
+                            .verifyHeaderDisplayed();
+
+                        await b2bLoginPage.header
+                            .verifyLogoDisplayed();
+
+                        await b2bLoginPage.header
+                            .verifyNavigationDisplayed();
+
+                        await b2bLoginPage.header
+                            .verifySearchButtonDisplayed();
+                    }
+                );
+
+                await test.step(
+                    'Open B2B Login modal from Header',
+                    async () => {
+                        await b2bLoginPage
+                            .openLoginModal();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Login modal heading and instruction',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyModalDisplayed(
+                                b2bLoginData.modal
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B username field',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyUsernameField(
+                                b2bLoginData.fields,
+                                b2bLoginData.validation
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B password field is masked',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyPasswordField(
+                                b2bLoginData.fields,
+                                b2bLoginData.validation
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B fields are initially empty',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyFieldsInitiallyEmpty();
+                    }
+                );
+
+                await test.step(
+                    'Verify Forgot your password link',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyForgotPasswordLink(
+                                b2bLoginData
+                                    .links
+                                    .forgotPassword,
+
+                                b2bLoginData
+                                    .links
+                                    .forgotPasswordPath
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Login button',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyLoginButton(
+                                b2bLoginData
+                                    .buttons
+                                    .login
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B modal Close button',
+                    async () => {
+                        await b2bLoginPage
+                            .verifyCloseButton();
+                    }
+                );
+
+                await test.step(
+                    'Enter B2B credentials securely',
+                    async () => {
+                        await b2bLoginPage
+                            .fillCredentials(
+                                b2bUsername,
+                                b2bPassword
+                            );
+
+                        await b2bLoginPage
+                            .verifyCredentialsEntered();
+                    }
+                );
+
+                await test.step(
+                    'Submit valid B2B credentials',
+                    async () => {
+                        await b2bLoginPage
+                            .submitLogin(
+                                b2bLoginData
+                                    .paths
+                                    .dashboard
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify successful B2B authentication',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyDashboardNavigation(
+                                b2bDashboardData
+                                    .expectedTitle,
+
+                                b2bDashboardData
+                                    .paths
+                                    .dashboard
+                            );
+
+                        await b2bDashboardPage
+                            .verifyAuthenticatedState();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Dashboard breadcrumb',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyBreadcrumb(
+                                b2bDashboardData
+                                    .breadcrumb
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Dashboard heading and description',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyDashboardHeading(
+                                b2bDashboardData
+                                    .headings
+                                    .main,
+
+                                b2bDashboardData
+                                    .descriptionKeyword
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Dashboard navigation menu',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyDashboardMenu(
+                                b2bDashboardData
+                                    .navigation
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify active Dashboard tab',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyActiveDashboardTab();
+                    }
+                );
+
+                await test.step(
+                    'Verify authenticated Header navigation',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyAuthenticatedHeader();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Dashboard information message',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyInformationMessage(
+                                b2bDashboardData
+                                    .message
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Latest Updates filter',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyLatestUpdatesFilter(
+                                b2bDashboardData
+                                    .updates
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify latest product updates',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyProductUpdates(
+                                b2bDashboardData
+                                    .updates
+                                    .minimumUpdateCount
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify product update dates',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyProductUpdateDates();
+                    }
+                );
+
+                await test.step(
+                    'Verify authenticated Footer',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyAuthenticatedFooter();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Log out link',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyLogoutLink(
+                                b2bDashboardData
+                                    .footer
+                                    .logoutText,
+
+                                b2bDashboardData
+                                    .paths
+                                    .logoutPrefix
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Log out from B2B Dashboard',
+                    async () => {
+                        await b2bDashboardPage
+                            .logout();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B session is closed',
+                    async () => {
+                        await b2bDashboardPage
+                            .verifyLoggedOut();
+                    }
+                );
+            }
+        );
+    }
+);
+
+===== b2bCatalog.spec.js =====
+const path = require('path');
+
+const {
+    test,
+    expect
+} = require('@playwright/test');
+
+require('dotenv').config({
+    path: path.resolve(
+        process.cwd(),
+        '.env'
+    ),
+    quiet: true,
+    override: true
+});
+
+const {
+    B2BLoginPage
+} = require('../pages/B2BLoginPage');
+
+const {
+    B2BCatalogPage
+} = require(
+    '../pages/b2b/B2BCatalogPage'
+);
+
+const b2bLoginData = require(
+    '../testData/b2bLoginData.json'
+);
+
+const b2bCatalogData = require(
+    '../testData/b2bCatalogData.json'
+);
+
+test.describe(
+    'Nestle International Travel Retail B2B Catalog',
+    () => {
+        test(
+            'Validate authenticated B2B Product Catalog',
+            async ({ page }) => {
+                const b2bLoginPage =
+                    new B2BLoginPage(page);
+
+                const b2bCatalogPage =
+                    new B2BCatalogPage(page);
+
+                const username =
+                    process.env.B2B_USERNAME?.trim();
+
+                const password =
+                    process.env.B2B_PASSWORD;
+
+                expect(
+                    username,
+                    'B2B_USERNAME is missing from the project .env file'
+                ).toBeTruthy();
+
+                expect(
+                    password,
+                    'B2B_PASSWORD is missing from the project .env file'
+                ).toBeTruthy();
+
+                await test.step(
+                    'Open Home page for B2B authentication',
+                    async () => {
+                        await b2bLoginPage.navigate(
+                            b2bLoginData
+                                .backgroundPagePath
+                        );
+                    }
+                );
+
+                await test.step(
+                    'Open B2B Login modal',
+                    async () => {
+                        await b2bLoginPage
+                            .openLoginModal();
+                    }
+                );
+
+                await test.step(
+                    'Enter B2B credentials from environment file',
+                    async () => {
+                        await b2bLoginPage
+                            .fillCredentials(
+                                username,
+                                password
+                            );
+
+                        await b2bLoginPage
+                            .verifyCredentialsEntered();
+                    }
+                );
+
+                await test.step(
+                    'Submit B2B Login form',
+                    async () => {
+                        await b2bLoginPage
+                            .submitLogin(
+                                b2bLoginData
+                                    .paths
+                                    .dashboard
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Open authenticated B2B Catalog',
+                    async () => {
+                        await b2bCatalogPage
+                            .openCatalog(
+                                b2bCatalogData
+                                    .pagePath
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Catalog URL title and heading',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyPage(
+                                b2bCatalogData
+                                    .expectedTitle,
+
+                                b2bCatalogData
+                                    .paths
+                                    .catalog
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Catalog breadcrumb',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyBreadcrumb(
+                                b2bCatalogData
+                                    .breadcrumb
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Dashboard navigation menu',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyDashboardNavigation(
+                                b2bCatalogData
+                                    .dashboardNavigation
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify active Products tab',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyActiveProductsTab();
+                    }
+                );
+
+                await test.step(
+                    'Verify Brand Search and Sort filters',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyFilters(
+                                b2bCatalogData
+                                    .filters,
+
+                                b2bCatalogData
+                                    .brands
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Catalog product summary and totals',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyProductSummary(
+                                b2bCatalogData
+                                    .productSummary
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Catalog brand sections',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyBrandSections(
+                                b2bCatalogData
+                                    .brands
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify every Catalog product card',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyEveryProductCard(
+                                b2bCatalogData
+                                    .productSummary
+                                    .expectedTotal
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify initial bulk selection state',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyInitialBulkState(
+                                b2bCatalogData
+                                    .bulkActions
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Select and deselect first Catalog product',
+                    async () => {
+                        await b2bCatalogPage
+                            .selectAndDeselectFirstProduct(
+                                b2bCatalogData
+                                    .bulkActions
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Select All and Deselect All functionality',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifySelectAll(
+                                b2bCatalogData
+                                    .productSummary
+                                    .expectedTotal
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify Catalog download controls',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyDownloadControls(
+                                b2bCatalogData
+                                    .bulkActions
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Verify authenticated Footer and Logout link',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyFooterAndLogout(
+                                b2bCatalogData
+                                    .paths
+                                    .logoutPrefix
+                            );
+                    }
+                );
+
+                await test.step(
+                    'Log out from B2B Catalog',
+                    async () => {
+                        await b2bCatalogPage
+                            .logout();
+                    }
+                );
+
+                await test.step(
+                    'Verify B2B Catalog session is closed',
+                    async () => {
+                        await b2bCatalogPage
+                            .verifyLoggedOut();
+                    }
+                );
+            }
+        );
+    }
+);

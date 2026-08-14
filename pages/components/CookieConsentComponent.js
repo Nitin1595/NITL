@@ -14,12 +14,12 @@ class CookieConsentComponent {
             '#onetrust-banner-sdk'
         );
 
-        // Dark overlay covering the website
+        // Dark overlay that can block page interactions
         this.cookieOverlay = page.locator(
             '.onetrust-pc-dark-filter'
         );
 
-        // Cookie action buttons
+        // Stable OneTrust action-button selectors
         this.acceptAllButton = page.locator(
             '#onetrust-accept-btn-handler'
         );
@@ -32,7 +32,7 @@ class CookieConsentComponent {
             '#onetrust-pc-btn-handler'
         );
 
-        // Accessible-name fallbacks
+        // Accessible fallback selectors
         this.acceptAllButtonByRole = page.getByRole(
             'button',
             {
@@ -47,130 +47,187 @@ class CookieConsentComponent {
             }
         );
 
-        this.cookieSettingsButtonByRole = page.getByRole(
-            'button',
-            {
-                name: /cookie settings/i
-            }
-        );
+        this.cookieSettingsButtonByRole =
+            page.getByRole(
+                'button',
+                {
+                    name: /cookie settings/i
+                }
+            );
+    }
+
+    async getVisibleAcceptButton() {
+        const buttonByIdVisible =
+            await this.acceptAllButton
+                .isVisible({
+                    timeout: 2000
+                })
+                .catch(() => false);
+
+        if (buttonByIdVisible) {
+            return this.acceptAllButton;
+        }
+
+        const buttonByRoleVisible =
+            await this.acceptAllButtonByRole
+                .isVisible({
+                    timeout: 2000
+                })
+                .catch(() => false);
+
+        if (buttonByRoleVisible) {
+            return this.acceptAllButtonByRole;
+        }
+
+        return null;
+    }
+
+    async getVisibleRejectButton() {
+        const buttonByIdVisible =
+            await this.rejectAllButton
+                .isVisible({
+                    timeout: 2000
+                })
+                .catch(() => false);
+
+        if (buttonByIdVisible) {
+            return this.rejectAllButton;
+        }
+
+        const buttonByRoleVisible =
+            await this.rejectAllButtonByRole
+                .isVisible({
+                    timeout: 2000
+                })
+                .catch(() => false);
+
+        if (buttonByRoleVisible) {
+            return this.rejectAllButtonByRole;
+        }
+
+        return null;
     }
 
     async isCookiePopupDisplayed() {
-        const acceptButtonByIdVisible =
-            await this.acceptAllButton
-                .isVisible({
-                    timeout: 3000
-                })
-                .catch(() => false);
+        const acceptButton =
+            await this.getVisibleAcceptButton();
 
-        if (acceptButtonByIdVisible) {
-            return true;
-        }
-
-        return this.acceptAllButtonByRole
-            .isVisible({
-                timeout: 3000
-            })
-            .catch(() => false);
+        return acceptButton !== null;
     }
 
     async acceptAllCookies() {
-        const cookiePopupDisplayed =
-            await this.isCookiePopupDisplayed();
+        const acceptButton =
+            await this.getVisibleAcceptButton();
 
-        if (!cookiePopupDisplayed) {
-            return;
+        if (acceptButton) {
+            await expect(
+                acceptButton,
+                'Accept all cookies button should be visible'
+            ).toBeVisible();
+
+            await expect(
+                acceptButton,
+                'Accept all cookies button should be enabled'
+            ).toBeEnabled();
+
+            await acceptButton.click();
+
+            await expect(
+                acceptButton,
+                'Cookie banner should close after accepting cookies'
+            ).toBeHidden({
+                timeout: 15000
+            });
         }
 
-        const acceptButtonByIdVisible =
-            await this.acceptAllButton
-                .isVisible()
-                .catch(() => false);
-
-        const acceptButton =
-            acceptButtonByIdVisible
-                ? this.acceptAllButton
-                : this.acceptAllButtonByRole;
-
-        await expect(
-            acceptButton,
-            'Accept all cookies button should be visible'
-        ).toBeVisible();
-
-        await expect(
-            acceptButton,
-            'Accept all cookies button should be enabled'
-        ).toBeEnabled();
-
-        await acceptButton.click();
-
-        await expect(
-            acceptButton,
-            'Cookie popup should close after accepting cookies'
-        ).toBeHidden({
-            timeout: 15000
-        });
-
-        await this.waitForCookieOverlayToDisappear();
+        await this.waitUntilCookieOverlayIsClosed();
     }
 
     async rejectAllCookies() {
-        const rejectButtonByIdVisible =
-            await this.rejectAllButton
-                .isVisible({
-                    timeout: 3000
-                })
-                .catch(() => false);
+        const rejectButton =
+            await this.getVisibleRejectButton();
 
-        const rejectButtonByRoleVisible =
-            await this.rejectAllButtonByRole
-                .isVisible({
-                    timeout: 3000
-                })
-                .catch(() => false);
+        if (rejectButton) {
+            await expect(
+                rejectButton,
+                'Reject All button should be visible'
+            ).toBeVisible();
 
-        if (
-            !rejectButtonByIdVisible &&
-            !rejectButtonByRoleVisible
-        ) {
+            await expect(
+                rejectButton,
+                'Reject All button should be enabled'
+            ).toBeEnabled();
+
+            await rejectButton.click();
+
+            await expect(
+                rejectButton,
+                'Cookie banner should close after rejecting cookies'
+            ).toBeHidden({
+                timeout: 15000
+            });
+        }
+
+        await this.waitUntilCookieOverlayIsClosed();
+    }
+
+    async waitUntilCookieOverlayIsClosed() {
+        const overlayCount =
+            await this.cookieOverlay.count();
+
+        if (overlayCount === 0) {
             return;
         }
 
-        const rejectButton =
-            rejectButtonByIdVisible
-                ? this.rejectAllButton
-                : this.rejectAllButtonByRole;
+        const overlayVisible =
+            await this.cookieOverlay
+                .isVisible()
+                .catch(() => false);
 
+        if (!overlayVisible) {
+            return;
+        }
+
+        /*
+         * OneTrust can keep the overlay visible briefly while
+         * completing the banner-closing animation.
+         */
         await expect(
-            rejectButton,
-            'Reject All button should be visible'
-        ).toBeVisible();
-
-        await rejectButton.click();
-
-        await expect(
-            rejectButton,
-            'Cookie popup should close after rejecting cookies'
+            this.cookieOverlay,
+            'OneTrust cookie overlay should disappear'
         ).toBeHidden({
             timeout: 15000
         });
-
-        await this.waitForCookieOverlayToDisappear();
     }
 
-    async waitForCookieOverlayToDisappear() {
-        const overlayExists =
-            await this.cookieOverlay.count();
+    async ensureCookiePopupIsClosed() {
+        const acceptButton =
+            await this.getVisibleAcceptButton();
 
-        if (overlayExists === 0) {
-            return;
+        if (acceptButton) {
+            await expect(
+                acceptButton
+            ).toBeVisible();
+
+            await acceptButton.click();
+
+            await expect(
+                acceptButton
+            ).toBeHidden({
+                timeout: 15000
+            });
         }
 
-        await expect(
-            this.cookieOverlay,
-            'Cookie overlay should disappear'
-        ).toBeHidden({
-            timeout: 15000
+        await this.waitUntilCookieOverlayIsClosed();
+
+        await this.page.evaluate(() => {
+            document.querySelectorAll('.onetrust-pc-dark-filter').forEach(
+                overlay => {
+                    overlay.style.display = 'none';
+                    overlay.style.pointerEvents = 'none';
+                    overlay.style.visibility = 'hidden';
+                }
+            );
         });
     }
 
@@ -179,29 +236,25 @@ class CookieConsentComponent {
             this.cookieConsentSdk
         ).toBeAttached();
 
-        const acceptButtonByIdVisible =
-            await this.acceptAllButton
-                .isVisible()
-                .catch(() => false);
-
         const acceptButton =
-            acceptButtonByIdVisible
-                ? this.acceptAllButton
-                : this.acceptAllButtonByRole;
+            await this.getVisibleAcceptButton();
+
+        expect(
+            acceptButton,
+            'Accept all cookies button should exist'
+        ).not.toBeNull();
 
         await expect(
             acceptButton
         ).toBeVisible();
 
-        const rejectButtonByIdVisible =
-            await this.rejectAllButton
-                .isVisible()
-                .catch(() => false);
-
         const rejectButton =
-            rejectButtonByIdVisible
-                ? this.rejectAllButton
-                : this.rejectAllButtonByRole;
+            await this.getVisibleRejectButton();
+
+        expect(
+            rejectButton,
+            'Reject All button should exist'
+        ).not.toBeNull();
 
         await expect(
             rejectButton

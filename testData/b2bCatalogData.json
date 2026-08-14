@@ -1,0 +1,67 @@
+{
+  "pagePath": "/catalog",
+  "expectedTitle": "Catalog PDH | Nestle International Travel Retail",
+  "heading": "Products",
+  "breadcrumb": [
+    "Home",
+    "Dashboard",
+    "Products"
+  ],
+  "dashboardNavigation": [
+    {
+      "name": "Dashboard",
+      "path": "/dashboard"
+    },
+    {
+      "name": "Products",
+      "path": "/catalog"
+    },
+    {
+      "name": "File a Claim",
+      "path": "/dashboard/claim-management-form"
+    },
+    {
+      "name": "General Sales & Delivery Terms",
+      "path": "/general-sales-delivery-terms"
+    }
+  ],
+  "filters": {
+    "brandDefaultValue": "All",
+    "brandDefaultText": "Brand",
+    "searchPlaceholder": "Search",
+    "searchMaximumLength": "128",
+    "sortDefaultValue": "created_DESC",
+    "sortDefaultText": "Newest first",
+    "sortOptions": [
+      "Oldest first",
+      "Newest first"
+    ]
+  },
+  "brands": [
+    "KitKat",
+    "Nestle Swiss Chocolate",
+    "Smarties",
+    "After Eight",
+    "Quality Street",
+    "Nestlé Mixes",
+    "Nescafé"
+  ],
+  "productSummary": {
+    "text": "Displaying 80 of 80 products",
+    "expectedTotal": 80
+  },
+  "bulkActions": {
+    "selectAllText": "Select / Deselect all",
+    "initialSelectedText": "0 products selected.",
+    "oneSelectedText": "1 product selected.",
+    "downloadSelectedText": "Download selected",
+    "downloadAllText": "Download all products data (XLSX)",
+    "downloadAllPath": "/catalog/download-xlsx"
+  },
+  "paths": {
+    "home": "/",
+    "dashboard": "/dashboard",
+    "catalog": "/catalog",
+    "logoutPrefix": "/user/logout"
+  }
+}
