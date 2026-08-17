@@ -1,0 +1,194 @@
+{
+  "page": {
+    "path": "/contact-us",
+    "expectedTitle": "Contact Us | Nestle International Travel Retail",
+    "heading": "Contact Us"
+  },
+  "breadcrumb": [
+    "Home",
+    "Contact Us"
+  ],
+  "header": {
+    "productsPath": "/products",
+    "aboutUsPath": "/about-us",
+    "foodCategoryPath": "/food-1-category",
+    "locationPath": "/location",
+    "b2bLoginPath": "/login-modal",
+    "contactUsPath": "/contact-us",
+    "searchPlaceholder": "Search",
+    "searchMaximumLength": "128"
+  },
+  "address": {
+    "heading": "Our Address",
+    "company": "Nestlé Enterprises S.A.",
+    "division": "Nestlé International Travel Retail Division",
+    "addressKeyword": "Rue Entre-deux-Villes 12",
+    "cityKeyword": "Vevey",
+    "postalCode": "1800",
+    "country": "Switzerland"
+  },
+  "form": {
+    "action": "/contact-us",
+    "method": "post",
+    "heading": "Send us a message"
+  },
+  "fields": {
+    "firstName": {
+      "label": "First name",
+      "id": "edit-first-name",
+      "name": "first_name",
+      "type": "text",
+      "maximumLength": "255",
+      "required": true
+    },
+    "lastName": {
+      "label": "Last name",
+      "id": "edit-last-name",
+      "name": "last_name",
+      "type": "text",
+      "maximumLength": "255",
+      "required": true
+    },
+    "email": {
+      "label": "Email",
+      "id": "edit-wf-email",
+      "name": "wf_email",
+      "type": "email",
+      "maximumLength": "254",
+      "required": true
+    },
+    "country": {
+      "label": "Country",
+      "id": "edit-country",
+      "name": "country",
+      "defaultValue": "",
+      "defaultText": "Select Country",
+      "required": false
+    },
+    "phone": {
+      "label": "Phone number (optional)",
+      "id": "edit-phone",
+      "name": "phone",
+      "type": "tel",
+      "maximumLength": "128",
+      "placeholder": "+1 201-555-0123",
+      "required": false
+    },
+    "productDescription": {
+      "label": "Product Description",
+      "id": "edit-product-description",
+      "name": "product_description",
+      "rows": "5",
+      "required": false
+    },
+    "batchCode": {
+      "label": "Batch Code",
+      "id": "edit-batch-code",
+      "name": "batch_code",
+      "type": "text",
+      "maximumLength": "255",
+      "required": false
+    },
+    "ean": {
+      "label": "EAN",
+      "id": "edit-ean",
+      "name": "ean",
+      "type": "text",
+      "maximumLength": "255",
+      "required": false
+    },
+    "bestBeforeDate": {
+      "label": "Best Before Date",
+      "id": "edit-best-before-date",
+      "name": "best_before_date",
+      "type": "date",
+      "required": false
+    },
+    "message": {
+      "label": "Message",
+      "id": "edit-message",
+      "name": "message",
+      "rows": "5",
+      "required": false
+    }
+  },
+  "requiredFieldKeys": [
+    "firstName",
+    "lastName",
+    "email"
+  ],
+  "optionalFieldKeys": [
+    "country",
+    "phone",
+    "productDescription",
+    "batchCode",
+    "ean",
+    "bestBeforeDate",
+    "message"
+  ],
+  "countryValidation": {
+    "minimumOptionCount": 200,
+    "sampleOptions": [
+      "Australia",
+      "Canada",
+      "France",
+      "India",
+      "Switzerland",
+      "United Kingdom",
+      "United States"
+    ]
+  },
+  "captcha": {
+    "legend": "CAPTCHA",
+    "descriptionKeyword": "human visitor",
+    "iframeTitle": "reCAPTCHA",
+    "validatePresenceOnly": true,
+    "interact": false
+  },
+  "buttons": {
+    "submit": {
+      "text": "Send Message",
+      "type": "submit",
+      "click": false
+    }
+  },
+  "footer": {
+    "internalLinks": [
+      {
+        "name": "About us",
+        "path": "/about-us"
+      },
+      {
+        "name": "Contact Us",
+        "path": "/contact-us"
+      },
+      {
+        "name": "Sitemap",
+        "path": "/sitemap"
+      },
+      {
+        "name": "B2B Login",
+        "path": "/login-modal"
+      }
+    ],
+    "externalLinks": [
+      {
+        "name": "Privacy Policy",
+        "hrefKeyword": "nestle.com/aboutus/businessprinciples/privacy"
+      },
+      {
+        "name": "Cookie policy",
+        "hrefKeyword": "nestle.com/info/cookies"
+      }
+    ],
+    "copyrightKeyword": "Nestlé",
+    "copyrightText": "Nestlé – All Rights Reserved."
+  },
+  "safety": {
+    "fillForm": false,
+    "interactWithCaptcha": false,
+    "clickSendMessage": false,
+    "submitForm": false,
+    "validateOnly": true
+  }
+}

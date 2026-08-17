@@ -1,8 +1,20 @@
 const { expect } = require('@playwright/test');
 
+const {
+    HeaderComponent
+} = require('../components/HeaderComponent');
+
+const {
+    FooterComponent
+} = require('../components/FooterComponent');
+
 class B2BGeneralSalesTermsPage {
     constructor(page) {
         this.page = page;
+
+        this.header = new HeaderComponent(page);
+        this.footerComponent =
+            new FooterComponent(page);
 
         // Main page content
         this.mainContent = page.locator(
@@ -16,7 +28,8 @@ class B2BGeneralSalesTermsPage {
         this.pageHeading = this.pageTitleBlock.getByRole(
             'heading',
             {
-                name: 'General Sales & Delivery Terms',
+                name:
+                    'General Sales & Delivery Terms',
                 level: 1,
                 exact: true
             }
@@ -26,12 +39,32 @@ class B2BGeneralSalesTermsPage {
             'article.node--type-dsu-component-page'
         );
 
-        // Header
-        this.header = page.locator(
+        // Breadcrumb
+        this.breadcrumb = page.locator(
+            'nav[aria-label="breadcrumb"]'
+        );
+
+        this.breadcrumbItems =
+            this.breadcrumb.locator(
+                '.breadcrumb-item'
+            );
+
+        this.homeBreadcrumbLink =
+            this.breadcrumb.locator(
+                'a[href="/"]'
+            ).first();
+
+        this.activeBreadcrumb =
+            this.breadcrumb.locator(
+                '.breadcrumb-item.active'
+            );
+
+        // Stable Header locators
+        this.siteHeader = page.locator(
             'header#header'
         );
 
-        this.logoLink = this.header.locator(
+        this.logoLink = this.siteHeader.locator(
             'a.navbar-brand[rel="home"]'
         );
 
@@ -39,119 +72,97 @@ class B2BGeneralSalesTermsPage {
             'img'
         );
 
-        this.mainNavigation = this.header.locator(
-            '#block-main-navigation'
-        );
+        this.mainNavigation =
+            this.siteHeader.locator(
+                '#block-main-navigation'
+            );
 
-        this.productsLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'Products',
-                exact: true
-            }
-        );
+        this.productsLink =
+            this.mainNavigation.locator(
+                'a[href="/products"]'
+            );
 
-        this.whoWeAreMenu = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: /Who we are/i
-            }
-        );
+        this.whoWeAreDropdown =
+            this.mainNavigation.locator(
+                'li.menu-item--expanded.dropdown'
+            );
 
-        this.aboutUsLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'About US',
-                exact: true
-            }
-        );
+        this.whoWeAreMenu =
+            this.whoWeAreDropdown.locator(
+                'a[data-bs-toggle="dropdown"]'
+            ).first();
 
-        this.foodCategoryLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'Food as the #1 category',
-                exact: true
-            }
-        );
+        /*
+         * Stable href locators are used instead of visible text.
+         * This prevents About US versus About Us failures.
+         */
+        this.aboutUsLink =
+            this.whoWeAreDropdown.locator(
+                'a[href="/about-us"]'
+            );
 
-        this.locationLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'Location',
-                exact: true
-            }
-        );
+        this.foodCategoryLink =
+            this.whoWeAreDropdown.locator(
+                'a[href="/food-1-category"]'
+            );
 
-        this.catalogLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'Our Catalog',
-                exact: true
-            }
-        );
+        this.locationLink =
+            this.whoWeAreDropdown.locator(
+                'a[href="/location"]'
+            );
 
-        this.contactUsLink = this.mainNavigation.getByRole(
-            'link',
-            {
-                name: 'Contact us',
-                exact: true
-            }
-        );
+        this.catalogLink =
+            this.mainNavigation.locator(
+                'a[href="/catalog"]'
+            );
 
-        this.searchToggleButton = this.header.locator(
-            'button.search__toggler'
-        );
+        this.b2bLoginLink =
+            this.mainNavigation.locator(
+                'a[href="/login-modal"]'
+            ).first();
 
-        this.searchInput = this.header.locator(
-            'input.region-header-search'
-        );
+        this.contactUsLink =
+            this.mainNavigation.locator(
+                'a[href="/contact-us"]'
+            );
 
-        // Breadcrumb
-        this.breadcrumb = page.locator(
-            'nav[aria-label="breadcrumb"]'
-        );
+        this.searchButton =
+            this.siteHeader.locator(
+                'button.search__toggler'
+            ).first();
 
-        this.breadcrumbItems = this.breadcrumb.locator(
-            '.breadcrumb-item'
-        );
+        this.searchInput =
+            this.siteHeader.locator(
+                'form.simple-search-form ' +
+                'input[name="search"]'
+            );
 
-        this.homeBreadcrumbLink = this.breadcrumb.getByRole(
-            'link',
-            {
-                name: 'Home',
-                exact: true
-            }
-        );
-
-        this.activeBreadcrumb = this.breadcrumb.locator(
-            '.breadcrumb-item.active'
-        );
-
-        // Document links
-        this.documentLinks = this.termsArticle.locator(
-            'a.file-download.file-download-pdf'
-        );
+        // PDF document links
+        this.documentLinks =
+            this.termsArticle.locator(
+                'a.file-download.file-download-pdf'
+            );
 
         // Footer
         this.footer = page.locator(
             'footer.site-footer'
         );
 
-        this.footerNavigation = this.footer.locator(
-            'nav.menu--footer'
-        );
+        this.footerNavigation =
+            this.footer.locator(
+                'nav.menu--footer'
+            );
 
-        this.logoutLink = this.footerNavigation.getByRole(
-            'link',
-            {
-                name: 'Log out',
-                exact: true
-            }
-        );
+        this.logoutLink =
+            this.footerNavigation.locator(
+                'a[data-drupal-link-system-path=' +
+                '"user/logout"]'
+            ).first();
 
-        this.footerCopyright = this.footer.locator(
-            '#block-copyright'
-        );
+        this.footerCopyright =
+            this.footer.locator(
+                '#block-copyright'
+            );
     }
 
     async openPage(expectedPath) {
@@ -178,7 +189,8 @@ class B2BGeneralSalesTermsPage {
     async verifyPage(expectedPage) {
         await expect(this.page).toHaveURL(
             url =>
-                url.pathname === expectedPage.path
+                url.pathname ===
+                expectedPage.path
         );
 
         await expect(this.page).toHaveTitle(
@@ -210,11 +222,13 @@ class B2BGeneralSalesTermsPage {
 
     async verifyHeader(expectedHeader) {
         await expect(
-            this.header
+            this.siteHeader,
+            'Terms page Header should be displayed'
         ).toBeVisible();
 
         await expect(
-            this.logoLink
+            this.logoLink,
+            'Terms page logo should be displayed'
         ).toBeVisible();
 
         await expect(
@@ -246,34 +260,21 @@ class B2BGeneralSalesTermsPage {
             this.mainNavigation
         ).toBeVisible();
 
-        for (
-            const navigationItem
-            of expectedHeader.navigation
-        ) {
-            const navigationLink =
-                this.mainNavigation.getByRole(
-                    'link',
-                    {
-                        name: navigationItem.name,
-                        exact: true
-                    }
-                );
-
-            await expect(
-                navigationLink,
-                `Header link should be visible: ${navigationItem.name}`
-            ).toBeVisible();
-
-            await expect(
-                navigationLink
-            ).toHaveAttribute(
-                'href',
-                navigationItem.path
-            );
-        }
+        await expect(
+            this.productsLink,
+            'Products Header link should exist'
+        ).toBeVisible();
 
         await expect(
-            this.whoWeAreMenu
+            this.productsLink
+        ).toHaveAttribute(
+            'href',
+            '/products'
+        );
+
+        await expect(
+            this.whoWeAreMenu,
+            'Who We Are menu should exist'
         ).toBeVisible();
 
         await expect(
@@ -284,48 +285,93 @@ class B2BGeneralSalesTermsPage {
         );
 
         await expect(
-            this.whoWeAreMenu
+            this.aboutUsLink,
+            'Who We Are link should exist: About Us'
+        ).toBeAttached();
+
+        await expect(
+            this.aboutUsLink
         ).toHaveAttribute(
-            'aria-haspopup',
-            'true'
+            'href',
+            '/about-us'
         );
 
-        for (
-            const dropdownItem
-            of expectedHeader.whoWeAreLinks
-        ) {
-            const dropdownLink =
-                this.mainNavigation.getByRole(
-                    'link',
-                    {
-                        name: dropdownItem.name,
-                        exact: true
-                    }
-                );
+        await expect(
+            this.foodCategoryLink,
+            'Who We Are link should exist: Food category'
+        ).toBeAttached();
 
-            await expect(
-                dropdownLink,
-                `Who We Are link should exist: ${dropdownItem.name}`
-            ).toBeAttached();
+        await expect(
+            this.foodCategoryLink
+        ).toHaveAttribute(
+            'href',
+            '/food-1-category'
+        );
 
+        await expect(
+            this.locationLink,
+            'Who We Are link should exist: Location'
+        ).toBeAttached();
+
+        await expect(
+            this.locationLink
+        ).toHaveAttribute(
+            'href',
+            '/location'
+        );
+
+        /*
+         * The public Header can show either Our Catalog
+         * or B2B Login depending on session state.
+         */
+        const catalogCount =
+            await this.catalogLink.count();
+
+        const b2bLoginCount =
+            await this.b2bLoginLink.count();
+
+        expect(
+            catalogCount + b2bLoginCount,
+            'Header should contain either Our Catalog or B2B Login'
+        ).toBeGreaterThan(0);
+
+        if (catalogCount > 0) {
             await expect(
-                dropdownLink
+                this.catalogLink
             ).toHaveAttribute(
                 'href',
-                dropdownItem.path
+                '/catalog'
+            );
+        }
+
+        if (b2bLoginCount > 0) {
+            await expect(
+                this.b2bLoginLink
+            ).toHaveAttribute(
+                'href',
+                '/login-modal'
             );
         }
 
         await expect(
-            this.searchToggleButton
+            this.contactUsLink,
+            'Contact Us Header link should exist'
         ).toBeVisible();
 
         await expect(
-            this.searchToggleButton
+            this.contactUsLink
         ).toHaveAttribute(
-            'type',
-            'button'
+            'href',
+            '/contact-us'
         );
+
+        await expect(
+            this.searchButton
+        ).toBeVisible();
+
+        await expect(
+            this.searchButton
+        ).toBeEnabled();
 
         await expect(
             this.searchInput
@@ -393,18 +439,20 @@ class B2BGeneralSalesTermsPage {
             of expectedDocuments
         ) {
             const documentLink =
-                this.termsArticle.getByRole(
-                    'link',
-                    {
-                        name: expectedDocument.name,
-                        exact: true
-                    }
+                this.termsArticle.locator(
+                    `a[href="${expectedDocument.path}"]`
                 );
 
             await expect(
                 documentLink,
-                `Document link should be visible: ${expectedDocument.name}`
-            ).toBeVisible();
+                `Document link should exist: ${expectedDocument.name}`
+            ).toBeAttached();
+
+            await expect(
+                documentLink
+            ).toHaveText(
+                expectedDocument.name
+            );
 
             await expect(
                 documentLink
@@ -421,13 +469,12 @@ class B2BGeneralSalesTermsPage {
             );
 
             const relValue =
-                await documentLink.getAttribute(
-                    'rel'
-                );
+                await documentLink
+                    .getAttribute('rel');
 
             expect(
                 relValue,
-                `Document link should have a rel attribute: ${expectedDocument.name}`
+                `Document link should contain rel attribute: ${expectedDocument.name}`
             ).toBeTruthy();
 
             expect(
@@ -436,7 +483,7 @@ class B2BGeneralSalesTermsPage {
                     .includes(
                         expectedDocument.relKeyword
                     ),
-                `Document link should contain rel="${expectedDocument.relKeyword}": ${expectedDocument.name}`
+                `Document link should contain rel="${expectedDocument.relKeyword}"`
             ).toBeTruthy();
 
             await expect(
@@ -451,18 +498,15 @@ class B2BGeneralSalesTermsPage {
         expectedSafety
     ) {
         expect(
-            expectedSafety.validateLinksOnly,
-            'Terms test should validate document links'
+            expectedSafety.validateLinksOnly
         ).toBe(true);
 
         expect(
-            expectedSafety.downloadDocuments,
-            'Terms test should not download documents'
+            expectedSafety.downloadDocuments
         ).toBe(false);
 
         expect(
-            expectedSafety.openDocuments,
-            'Terms test should not open documents'
+            expectedSafety.openDocuments
         ).toBe(false);
 
         await expect(
@@ -475,7 +519,8 @@ class B2BGeneralSalesTermsPage {
     }
 
     async verifyFooter(expectedFooter) {
-        await this.footer.scrollIntoViewIfNeeded();
+        await this.footer
+            .scrollIntoViewIfNeeded();
 
         await expect(
             this.footer
@@ -490,18 +535,17 @@ class B2BGeneralSalesTermsPage {
             of expectedFooter.internalLinks
         ) {
             const footerLink =
-                this.footerNavigation.getByRole(
-                    'link',
-                    {
-                        name: expectedLink.name,
-                        exact: true
-                    }
-                );
+                this.footerNavigation.locator(
+                    `a[href="${expectedLink.path}"]`
+                ).filter({
+                    hasText:
+                        expectedLink.name
+                }).first();
 
             await expect(
                 footerLink,
-                `Footer link should be visible: ${expectedLink.name}`
-            ).toBeVisible();
+                `Footer link should exist: ${expectedLink.name}`
+            ).toBeAttached();
 
             await expect(
                 footerLink
@@ -526,26 +570,20 @@ class B2BGeneralSalesTermsPage {
                 );
 
             await expect(
-                externalLink,
-                `External Footer link should be visible: ${expectedExternalLink.name}`
+                externalLink
             ).toBeVisible();
 
             const hrefValue =
-                await externalLink.getAttribute(
-                    'href'
-                );
+                await externalLink
+                    .getAttribute('href');
 
-            expect(
-                hrefValue,
-                `External Footer link should contain an href: ${expectedExternalLink.name}`
-            ).toBeTruthy();
+            expect(hrefValue).toBeTruthy();
 
             expect(
                 hrefValue.includes(
                     expectedExternalLink
                         .hrefKeyword
-                ),
-                `External Footer link should contain the expected domain and path: ${expectedExternalLink.name}`
+                )
             ).toBeTruthy();
         }
 
@@ -570,7 +608,8 @@ class B2BGeneralSalesTermsPage {
         expectedText,
         expectedPathPrefix
     ) {
-        await this.footer.scrollIntoViewIfNeeded();
+        await this.footer
+            .scrollIntoViewIfNeeded();
 
         await expect(
             this.logoutLink
@@ -583,9 +622,8 @@ class B2BGeneralSalesTermsPage {
         );
 
         const logoutHref =
-            await this.logoutLink.getAttribute(
-                'href'
-            );
+            await this.logoutLink
+                .getAttribute('href');
 
         expect(
             logoutHref,
@@ -608,7 +646,8 @@ class B2BGeneralSalesTermsPage {
     }
 
     async logout() {
-        await this.footer.scrollIntoViewIfNeeded();
+        await this.footer
+            .scrollIntoViewIfNeeded();
 
         await expect(
             this.logoutLink

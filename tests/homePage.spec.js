@@ -1016,24 +1016,6 @@
 // };
 
 
-test('Basic Playwright test', async ({ page }) => {
-    const response = await page.goto('/', {
-        waitUntil: 'domcontentloaded',
-        timeout: 60000
-    });
-
-    expect(response).not.toBeNull();
-
-    expect(
-        response.status(),
-        `Website returned HTTP status ${response.status()}`
-    ).toBeLessThan(500);
-
-    await expect(page).toHaveURL(
-        /master-copy-h5hl5dy-fcsle4rj4pg7c\.eu-5\.platformsh\.site/
-    );
-});
-
 const {
     test,
     expect
@@ -1048,12 +1030,13 @@ const homePageData = require(
 );
 
 test.describe(
-    'Nestlé International Travel Retail Home Page',
+    'Nestle International Travel Retail Home Page',
     () => {
         test(
             'Validate all Home page components and navigation',
             async ({ page }) => {
-                const homePage = new HomePage(page);
+                const homePage =
+                    new HomePage(page);
 
                 await test.step(
                     'Navigate to the Home page',
@@ -1064,17 +1047,31 @@ test.describe(
 
                         await homePage
                             .verifyHomePageNavigation(
-                                homePageData.expectedTitle,
-                                homePageData.breadcrumb
+                                homePageData
+                                    .expectedTitle,
+
+                                homePageData
+                                    .breadcrumb
                             );
                     }
                 );
 
                 await test.step(
-                    'Verify the Nestlé International Travel Retail logo',
+                    'Verify the Nestle International Travel Retail logo',
                     async () => {
                         await homePage.header
                             .verifyLogoDisplayed();
+                    }
+                );
+
+                await test.step(
+                    'Verify Header components',
+                    async () => {
+                        await homePage.header
+                            .verifyHeaderDisplayed();
+
+                        await homePage.header
+                            .verifyNavigationDisplayed();
                     }
                 );
 
@@ -1084,6 +1081,15 @@ test.describe(
                         await expect(
                             homePage.header.productsLink
                         ).toBeVisible();
+
+                        await expect(
+                            homePage.header.productsLink
+                        ).toHaveAttribute(
+                            'href',
+                            homePageData
+                                .paths
+                                .products
+                        );
                     }
                 );
 
@@ -1093,15 +1099,17 @@ test.describe(
                         await expect(
                             homePage.header.whoWeAreMenu
                         ).toBeVisible();
+
+                        await homePage.header
+                            .verifyWhoWeAreLinksExist();
                     }
                 );
 
                 await test.step(
                     'Verify B2B Log In tab',
                     async () => {
-                        await expect(
-                            homePage.header.b2bLoginLink
-                        ).toBeVisible();
+                        await homePage.header
+                            .verifyPublicB2BLoginDisplayed();
                     }
                 );
 
@@ -1111,6 +1119,13 @@ test.describe(
                         await expect(
                             homePage.header.contactUsLink
                         ).toBeVisible();
+
+                        await expect(
+                            homePage.header.contactUsLink
+                        ).toHaveAttribute(
+                            'href',
+                            '/contact-us'
+                        );
                     }
                 );
 
@@ -1125,9 +1140,11 @@ test.describe(
                 await test.step(
                     'Verify Travel with a trusted partner banner',
                     async () => {
-                        await homePage.verifyHeroSection(
-                            homePageData.headings
-                        );
+                        await homePage
+                            .verifyHeroSection(
+                                homePageData
+                                    .headings
+                            );
                     }
                 );
 
@@ -1146,10 +1163,11 @@ test.describe(
                 await test.step(
                     'Verify brand logos',
                     async () => {
-                        await homePage.verifyBrandLogos(
-                            homePageData
-                                .minimumBrandLogoCount
-                        );
+                        await homePage
+                            .verifyBrandLogos(
+                                homePageData
+                                    .minimumBrandLogoCount
+                            );
                     }
                 );
 
@@ -1187,11 +1205,14 @@ test.describe(
                         await homePage
                             .verifyViewAllProductsButton();
 
-                        await homePage.navigateToProducts();
+                        await homePage
+                            .navigateToProducts();
 
                         await expect(page).toHaveURL(
                             new RegExp(
-                                `${homePageData.paths.products}/?$`
+                                `${homePageData
+                                    .paths
+                                    .products}/?$`
                             )
                         );
                     }
@@ -1204,7 +1225,8 @@ test.describe(
                             .navigateToHome();
 
                         await expect(page).toHaveURL(
-                            /\/$/
+                            url =>
+                                url.pathname === '/'
                         );
                     }
                 );
@@ -1217,7 +1239,9 @@ test.describe(
 
                         await expect(page).toHaveURL(
                             new RegExp(
-                                `${homePageData.paths.userLogin}/?$`
+                                `${homePageData
+                                    .paths
+                                    .userLogin}/?$`
                             )
                         );
                     }

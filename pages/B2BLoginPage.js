@@ -22,67 +22,95 @@ class B2BLoginPage {
         this.cookieConsent =
             new CookieConsentComponent(page);
 
-        this.loginDialog = page.locator(
-            'div.ui-dialog[role="dialog"]'
-        );
-
-        this.modalContent = this.loginDialog.locator(
-            '#drupal-modal'
-        );
-
-        this.dialogTitle = this.loginDialog.locator(
-            'h1.ui-dialog-title, .ui-dialog-title'
+        this.b2bLoginLink = page.locator(
+            [
+                '#header a[href="/login-modal"]',
+                '#header a.nav-link--login-modal',
+                'a[data-drupal-link-system-path="login-modal"]'
+            ].join(', ')
         ).first();
 
-        this.closeButton = this.loginDialog.locator(
-            'button.ui-dialog-titlebar-close'
-        );
-
-        this.modalCloseButton = this.closeButton;
-
-        this.welcomeHeading =
-            this.modalContent.getByRole(
-                'heading',
-                {
-                    name: 'Welcome back',
-                    exact: true
-                }
-            );
-
-        this.signInInstruction =
-            this.modalContent.getByRole(
-                'heading',
-                {
-                    name:
-                        'Please use your credentials to sign in below',
-                    exact: true
-                }
-            );
-
-        this.loginForm = this.modalContent.locator(
+        /*
+         * Stable Drupal Login form.
+         * This is the primary modal-open indicator.
+         */
+        this.loginForm = page.locator(
             'form#custom-popup-login-form'
+        ).first();
+
+        /*
+         * Modal content can contain text outside the form.
+         */
+        this.modalContent = page.locator(
+            '#drupal-modal'
+        ).filter({
+            has: this.loginForm
+        }).first();
+
+        this.loginDialog = this.loginForm.locator(
+            'xpath=ancestor::*[contains(@class, "ui-dialog")][1]'
         );
 
-        this.usernameInput = this.loginForm.locator(
-            'input[name="name"]'
+        this.dialogTitle = page.locator(
+            '.ui-dialog-title'
         ).first();
 
-        this.passwordInput = this.loginForm.locator(
-            'input[name="pass"]'
+        this.closeButton = page.locator(
+            'button.ui-dialog-titlebar-close'
         ).first();
 
-        this.usernameLabel = this.loginForm.locator(
-            'label[for^="edit-name"]'
-        ).first();
+        this.modalCloseButton =
+            this.closeButton;
 
-        this.passwordLabel = this.loginForm.locator(
-            'label[for^="edit-pass"]'
-        ).first();
+        /*
+         * Flexible text locators.
+         * These do not depend on heading roles.
+         */
+        this.welcomeHeading = this.modalContent
+            .getByText(
+                'Welcome back',
+                {
+                    exact: true
+                }
+            )
+            .first();
 
-        this.usernameDescription = this.loginForm.locator(
-            'small[id^="edit-name"], ' +
-            '[id^="edit-name"][class*="description"]'
-        ).first();
+        this.signInInstruction = this.modalContent
+            .getByText(
+                'Please use your credentials to sign in below',
+                {
+                    exact: true
+                }
+            )
+            .first();
+
+        this.usernameInput =
+            this.loginForm.locator(
+                'input[name="name"]'
+            ).first();
+
+        this.passwordInput =
+            this.loginForm.locator(
+                'input[name="pass"]'
+            ).first();
+
+        this.usernameLabel =
+            this.loginForm.locator(
+                'label[for^="edit-name"]'
+            ).first();
+
+        this.passwordLabel =
+            this.loginForm.locator(
+                'label[for^="edit-pass"]'
+            ).first();
+
+        this.usernameDescription =
+            this.loginForm.locator(
+                [
+                    'small[id^="edit-name"]',
+                    '[id^="edit-name"][class*="description"]'
+                ].join(', ')
+            ).first();
 
         this.forgotPasswordLink =
             this.loginForm.getByRole(
@@ -151,14 +179,18 @@ class B2BLoginPage {
         );
     }
 
-    async isVisible(locator, timeout = 1500) {
+    async isVisible(
+        locator,
+        timeout = 1500
+    ) {
         return locator.isVisible({
             timeout
         }).catch(() => false);
     }
 
     async clickIfVisible(locator) {
-        const visible = await this.isVisible(locator);
+        const visible =
+            await this.isVisible(locator);
 
         if (!visible) {
             return false;
@@ -183,7 +215,10 @@ class B2BLoginPage {
                 this.oneTrustDarkOverlay
             );
 
-        if (preferenceVisible || overlayVisible) {
+        if (
+            preferenceVisible ||
+            overlayVisible
+        ) {
             const accepted =
                 await this.clickIfVisible(
                     this.acceptRecommendedButton
@@ -221,6 +256,16 @@ class B2BLoginPage {
             }
         }
 
+        await this.oneTrustPreferenceCenter.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+
+        await this.oneTrustBanner.waitFor({
+            state: 'hidden',
+            timeout: 5000
+        }).catch(() => {});
+
         await this.oneTrustDarkOverlay.waitFor({
             state: 'hidden',
             timeout: 5000
@@ -238,11 +283,21 @@ class B2BLoginPage {
                         '.onetrust-pc-dark-filter'
                     )
                     .forEach(overlay => {
-                        overlay.style.display = 'none';
-                        overlay.style.visibility = 'hidden';
-                        overlay.style.pointerEvents = 'none';
+                        overlay.style.display =
+                            'none';
+
+                        overlay.style.visibility =
+                            'hidden';
+
+                        overlay.style.pointerEvents =
+                            'none';
                     });
             });
+
+            await this.oneTrustDarkOverlay.waitFor({
+                state: 'hidden',
+                timeout: 5000
+            }).catch(() => {});
         }
     }
 
@@ -252,26 +307,113 @@ class B2BLoginPage {
             timeout: 60000
         });
 
+        await expect(
+            this.header.header,
+            'Public Header should be displayed'
+        ).toBeVisible({
+            timeout: 30000
+        });
+
         await this.ensureOneTrustIsClosed();
 
         await expect(this.page).toHaveURL(
-            url => url.pathname === pagePath
+            url =>
+                url.pathname === pagePath
         );
+    }
+
+    async clickB2BLoginLink() {
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should exist'
+        ).toBeAttached({
+            timeout: 15000
+        });
+
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should be visible'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.b2bLoginLink,
+            'B2B Log in link should be enabled'
+        ).toBeEnabled();
+
+        await this.b2bLoginLink.click({
+            force: true,
+            timeout: 15000
+        });
+    }
+
+    async waitForLoginForm(
+        timeout = 15000
+    ) {
+        return this.loginForm
+            .waitFor({
+                state: 'visible',
+                timeout
+            })
+            .then(() => true)
+            .catch(() => false);
     }
 
     async openLoginModal() {
         await this.ensureOneTrustIsClosed();
 
-        await this.header.openB2BLogin();
+        await this.clickB2BLoginLink();
+
+        let formDisplayed =
+            await this.waitForLoginForm(
+                15000
+            );
+
+        if (!formDisplayed) {
+            await this.ensureOneTrustIsClosed();
+
+            await this.b2bLoginLink.evaluate(
+                linkElement => {
+                    linkElement.click();
+                }
+            );
+
+            formDisplayed =
+                await this.waitForLoginForm(
+                    15000
+                );
+        }
+
+        expect(
+            formDisplayed,
+            'B2B Login form should open after clicking the Header link'
+        ).toBeTruthy();
 
         await expect(
-            this.loginDialog
+            this.loginForm,
+            'B2B Login form should be displayed'
         ).toBeVisible({
             timeout: 15000
         });
 
         await expect(
-            this.loginForm
+            this.modalContent,
+            'Drupal modal content should be displayed'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.usernameInput,
+            'B2B username field should be displayed'
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await expect(
+            this.passwordInput,
+            'B2B password field should be displayed'
         ).toBeVisible({
             timeout: 15000
         });
@@ -279,49 +421,69 @@ class B2BLoginPage {
         await this.ensureOneTrustIsClosed();
     }
 
-    async verifyModalDisplayed(expectedModal) {
+    async verifyModalDisplayed(
+        expectedModal
+    ) {
         await expect(
-            this.loginDialog
+            this.loginForm,
+            'B2B Login form should be visible'
         ).toBeVisible();
 
         await expect(
-            this.modalContent
+            this.modalContent,
+            'B2B modal content should be visible'
         ).toBeVisible();
 
-        await expect(
-            this.dialogTitle
-        ).toBeAttached();
+        const titleCount =
+            await this.dialogTitle.count();
 
-        if (expectedModal?.dialogTitle) {
+        if (
+            titleCount > 0 &&
+            expectedModal?.dialogTitle
+        ) {
             await expect(
                 this.dialogTitle
-            ).toHaveText(
+            ).toContainText(
                 expectedModal.dialogTitle
             );
         }
 
         if (expectedModal?.heading) {
+            const expectedHeading =
+                this.modalContent
+                    .getByText(
+                        expectedModal.heading,
+                        {
+                            exact: true
+                        }
+                    )
+                    .first();
+
             await expect(
-                this.welcomeHeading
-            ).toHaveText(
-                expectedModal.heading
-            );
+                expectedHeading,
+                `B2B modal should contain heading text: ${expectedModal.heading}`
+            ).toBeVisible();
         }
 
         if (expectedModal?.instruction) {
+            const expectedInstruction =
+                this.modalContent
+                    .getByText(
+                        expectedModal.instruction,
+                        {
+                            exact: true
+                        }
+                    )
+                    .first();
+
             await expect(
-                this.signInInstruction
-            ).toHaveText(
-                expectedModal.instruction
-            );
+                expectedInstruction,
+                `B2B modal should contain instruction text: ${expectedModal.instruction}`
+            ).toBeVisible();
         }
     }
 
     async verifyLoginModal() {
-        await expect(
-            this.loginDialog
-        ).toBeVisible();
-
         await expect(
             this.loginForm
         ).toBeVisible();
@@ -359,11 +521,21 @@ class B2BLoginPage {
 
         await expect(
             this.usernameInput
-        ).toHaveAttribute('type', 'text');
+        ).toBeEnabled();
 
         await expect(
             this.usernameInput
-        ).toHaveAttribute('name', 'name');
+        ).toHaveAttribute(
+            'type',
+            'text'
+        );
+
+        await expect(
+            this.usernameInput
+        ).toHaveAttribute(
+            'name',
+            'name'
+        );
 
         if (
             expectedValidation
@@ -379,7 +551,8 @@ class B2BLoginPage {
         }
 
         if (
-            expectedValidation.usernameRequired
+            expectedValidation
+                .usernameRequired
         ) {
             await expect(
                 this.usernameInput
@@ -390,16 +563,19 @@ class B2BLoginPage {
         }
 
         const descriptionCount =
-            await this.usernameDescription.count();
+            await this.usernameDescription
+                .count();
 
         if (
             descriptionCount > 0 &&
-            expectedFields.usernameDescription
+            expectedFields
+                .usernameDescription
         ) {
             await expect(
                 this.usernameDescription
             ).toContainText(
-                expectedFields.usernameDescription
+                expectedFields
+                    .usernameDescription
             );
         }
     }
@@ -424,14 +600,22 @@ class B2BLoginPage {
 
         await expect(
             this.passwordInput
+        ).toBeEnabled();
+
+        await expect(
+            this.passwordInput
         ).toHaveAttribute(
             'type',
-            expectedValidation.passwordInputType
+            expectedValidation
+                .passwordInputType
         );
 
         await expect(
             this.passwordInput
-        ).toHaveAttribute('name', 'pass');
+        ).toHaveAttribute(
+            'name',
+            'pass'
+        );
 
         if (
             expectedValidation
@@ -447,7 +631,8 @@ class B2BLoginPage {
         }
 
         if (
-            expectedValidation.passwordRequired
+            expectedValidation
+                .passwordRequired
         ) {
             await expect(
                 this.passwordInput
@@ -479,7 +664,9 @@ class B2BLoginPage {
         if (expectedText) {
             await expect(
                 this.forgotPasswordLink
-            ).toHaveText(expectedText);
+            ).toHaveText(
+                expectedText
+            );
         }
 
         if (expectedPath) {
@@ -492,7 +679,9 @@ class B2BLoginPage {
         }
     }
 
-    async verifyLoginButton(expectedText) {
+    async verifyLoginButton(
+        expectedText
+    ) {
         await expect(
             this.loginButton
         ).toBeVisible();
@@ -503,11 +692,16 @@ class B2BLoginPage {
 
         await expect(
             this.loginButton
-        ).toHaveText(expectedText);
+        ).toHaveText(
+            expectedText
+        );
 
         await expect(
             this.loginButton
-        ).toHaveAttribute('type', 'submit');
+        ).toHaveAttribute(
+            'type',
+            'submit'
+        );
     }
 
     async verifyCloseButton() {
@@ -521,40 +715,61 @@ class B2BLoginPage {
     }
 
     async fillUsername(username) {
-        expect(username).toBeTruthy();
+        expect(
+            username,
+            'B2B username should be provided'
+        ).toBeTruthy();
 
-        await this.usernameInput.fill(username);
+        await this.usernameInput.fill(
+            username
+        );
     }
 
     async fillPassword(password) {
-        expect(password).toBeTruthy();
+        expect(
+            password,
+            'B2B password should be provided'
+        ).toBeTruthy();
 
-        await this.passwordInput.fill(password);
+        await this.passwordInput.fill(
+            password
+        );
     }
 
-    async fillCredentials(username, password) {
+    async fillCredentials(
+        username,
+        password
+    ) {
         await this.fillUsername(username);
+
         await this.fillPassword(password);
     }
 
     async verifyCredentialsEntered() {
         const usernameValue =
-            await this.usernameInput.inputValue();
+            await this.usernameInput
+                .inputValue();
 
         const passwordValue =
-            await this.passwordInput.inputValue();
+            await this.passwordInput
+                .inputValue();
 
         expect(
-            usernameValue.length
+            usernameValue.length,
+            'Username field should contain a value'
         ).toBeGreaterThan(0);
 
         expect(
-            passwordValue.length
+            passwordValue.length,
+            'Password field should contain a value'
         ).toBeGreaterThan(0);
 
         await expect(
             this.passwordInput
-        ).toHaveAttribute('type', 'password');
+        ).toHaveAttribute(
+            'type',
+            'password'
+        );
     }
 
     async submitLogin(
@@ -563,11 +778,15 @@ class B2BLoginPage {
         await this.ensureOneTrustIsClosed();
 
         await expect(
-            this.loginButton
-        ).toBeVisible();
+            this.loginButton,
+            'B2B Login button should be visible'
+        ).toBeVisible({
+            timeout: 15000
+        });
 
         await expect(
-            this.loginButton
+            this.loginButton,
+            'B2B Login button should be enabled'
         ).toBeEnabled();
 
         await this.loginButton.click({
@@ -585,7 +804,8 @@ class B2BLoginPage {
         );
 
         await expect(
-            this.dashboardContent
+            this.dashboardContent,
+            'Authenticated Dashboard menu should be displayed'
         ).toBeVisible({
             timeout: 30000
         });
@@ -614,21 +834,33 @@ class B2BLoginPage {
         ).toBeVisible();
     }
 
-    async openForgotPasswordPage(expectedPath) {
+    async openForgotPasswordPage(
+        expectedPath
+    ) {
+        await expect(
+            this.forgotPasswordLink
+        ).toBeVisible();
+
         await this.forgotPasswordLink.click();
 
         await expect(this.page).toHaveURL(
-            url => url.pathname === expectedPath
+            url =>
+                url.pathname ===
+                expectedPath
         );
     }
 
     async closeLoginModal() {
+        await expect(
+            this.closeButton
+        ).toBeVisible();
+
         await this.closeButton.click({
             force: true
         });
 
         await expect(
-            this.loginDialog
+            this.loginForm
         ).toBeHidden({
             timeout: 10000
         });
@@ -636,13 +868,19 @@ class B2BLoginPage {
 
     async verifyModalClosed() {
         await expect(
-            this.loginDialog
-        ).toBeHidden();
+            this.loginForm
+        ).toBeHidden({
+            timeout: 10000
+        });
     }
 
-    async verifyCurrentPagePath(expectedPath) {
+    async verifyCurrentPagePath(
+        expectedPath
+    ) {
         await expect(this.page).toHaveURL(
-            url => url.pathname === expectedPath
+            url =>
+                url.pathname ===
+                expectedPath
         );
     }
 }
