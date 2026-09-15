@@ -3018,7 +3018,7 @@ const homePageData = require(
 );
 
 test.describe(
-    'Nestlé International Travel Retail Home Page',
+    'Nestlï¿½ International Travel Retail Home Page',
     () => {
         test(
             'Validate all Home page components and navigation',
@@ -3041,7 +3041,7 @@ test.describe(
                 );
 
                 await test.step(
-                    'Verify the Nestlé International Travel Retail logo',
+                    'Verify the Nestlï¿½ International Travel Retail logo',
                     async () => {
                         await homePage.header
                             .verifyLogoDisplayed();

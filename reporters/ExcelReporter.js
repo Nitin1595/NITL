@@ -10,60 +10,89 @@ class ExcelReporter {
     constructor() {
         this.results = [];
         this.executionStartTime = Date.now();
+
+        this.websiteName =
+            process.env.WEBSITE_NAME?.trim() ||
+            'NITR';
+
+        this.executedBy =
+            process.env.EXECUTED_BY?.trim() ||
+            'NITIN';
+
+        this.browserName =
+            process.env.REPORT_BROWSER_NAME?.trim() ||
+            'Chrome';
     }
 
     onTestEnd(test, result) {
-        const businessSteps = this.collectBusinessSteps(
-            result.steps || []
-        );
+        const businessSteps =
+            this.collectBusinessSteps(
+                result.steps || []
+            );
 
+        const defaultModule =
+            this.getModuleName(test);
+
+        /*
+         * If there are no business steps,
+         * create one result for the complete test.
+         */
         if (businessSteps.length === 0) {
+            const status =
+                this.mapStatus(result.status);
+
             this.results.push({
-                module: this.getModuleName(test.title),
-                page: this.getPageName(
-                    test.title,
-                    test.title
-                ),
-                button: test.title,
-                status:
-                    result.status === 'passed'
-                        ? 'Pass'
-                        : 'Fail',
+                fileName: this.getTestFileName(test),
+                module: defaultModule,
+                validation: test.title,
+                status: status,
                 remarks:
-                    result.status === 'passed'
+                    status === 'Pass'
                         ? 'Validation successful'
-                        : this.cleanErrorMessage(
-                            result.error?.message
-                        )
+                        : status === 'Skipped'
+                            ? 'Validation skipped'
+                            : this.cleanErrorMessage(
+                                result.error?.message
+                            )
             });
 
             return;
         }
 
+        /*
+         * Create one result for every business step.
+         */
         for (const step of businessSteps) {
+            const status =
+                step.error
+                    ? 'Fail'
+                    : result.status === 'skipped'
+                        ? 'Skipped'
+                        : 'Pass';
+
             this.results.push({
-                module: this.getModuleName(test.title),
+                fileName: this.getTestFileName(test),
+                module:
+                    this.getStepModuleName(
+                        defaultModule,
+                        step.title
+                    ),
 
-                page: this.getPageName(
-                    test.title,
-                    step.title
-                ),
+                validation:
+                    step.title,
 
-                button: step.title,
-
-                status:
-                    step.error
-                        ? 'Fail'
-                        : 'Pass',
+                status: status,
 
                 remarks:
                     step.error
                         ? this.cleanErrorMessage(
                             step.error.message
                         )
-                        : this.getSuccessRemark(
-                            step.title
-                        )
+                        : status === 'Skipped'
+                            ? 'Validation skipped'
+                            : this.getSuccessRemark(
+                                step.title
+                            )
             });
         }
     }
@@ -72,7 +101,10 @@ class ExcelReporter {
         const collectedSteps = [];
 
         for (const step of steps) {
-            if (step.category === 'test.step') {
+            if (
+                step.category ===
+                'test.step'
+            ) {
                 collectedSteps.push(step);
             }
 
@@ -91,99 +123,471 @@ class ExcelReporter {
         return collectedSteps;
     }
 
-    getModuleName(testTitle) {
-        const normalizedTitle =
-            testTitle.toLowerCase();
-
-        if (
-            normalizedTitle.includes(
-                'products page'
-            )
-        ) {
-            return 'Products';
+    mapStatus(status) {
+        if (status === 'passed') {
+            return 'Pass';
         }
 
-        if (
-            normalizedTitle.includes(
-                'who we are'
-            ) ||
-            normalizedTitle.includes(
-                'about us'
-            ) ||
-            normalizedTitle.includes(
-                'food category'
-            ) ||
-            normalizedTitle.includes(
-                'location'
-            )
-        ) {
-            return 'Who We Are';
+        if (status === 'skipped') {
+            return 'Skipped';
         }
 
-        if (
-            normalizedTitle.includes(
-                'b2b'
+        return 'Fail';
+    }
+
+    getTestFileName(test) {
+        return path
+            .basename(
+                test.location?.file || ''
             )
+            .toLowerCase();
+    }
+
+    getCompleteTestTitle(test) {
+        if (
+            typeof test.titlePath ===
+            'function'
         ) {
-            return 'B2B Login';
+            return test
+                .titlePath()
+                .join(' ')
+                .toLowerCase();
         }
 
+        return String(
+            test.title || ''
+        ).toLowerCase();
+    }
+
+    getModuleName(test) {
+        const fileName =
+            this.getTestFileName(test);
+
+        const completeTitle =
+            this.getCompleteTestTitle(test);
+
+        /*
+         * B2B Forgot Password
+         */
         if (
-            normalizedTitle.includes(
-                'contact'
+            fileName.includes(
+                'b2bforgotpassword'
+            ) ||
+            completeTitle.includes(
+                'forgot password'
+            ) ||
+            completeTitle.includes(
+                'reset password'
+            )
+        ) {
+            return 'B2B Forgot Password';
+        }
+
+        /*
+         * Claim Management
+         */
+        if (
+            fileName.includes(
+                'b2bclaimmanagement'
+            ) ||
+            completeTitle.includes(
+                'claim management'
+            )
+        ) {
+            return 'Claim Management';
+        }
+
+        /*
+         * General Sales & Delivery Terms
+         */
+        if (
+            fileName.includes(
+                'b2bgeneralsalesterms'
+            ) ||
+            completeTitle.includes(
+                'general sales'
+            ) ||
+            completeTitle.includes(
+                'delivery terms'
+            )
+        ) {
+            return 'General Sales & Delivery Terms';
+        }
+
+        /*
+         * B2B Catalog
+         */
+        if (
+            fileName.includes(
+                'b2bcatalog'
+            ) ||
+            completeTitle.includes(
+                'b2b catalog'
+            ) ||
+            completeTitle.includes(
+                'product catalog'
+            )
+        ) {
+            return 'B2B Catalog';
+        }
+
+        /*
+         * B2B Login & Dashboard
+         */
+        if (
+            fileName.includes(
+                'b2blogin'
+            ) ||
+            completeTitle.includes(
+                'b2b authentication'
+            ) ||
+            completeTitle.includes(
+                'login dashboard logout'
+            )
+        ) {
+            return 'B2B Login & Dashboard';
+        }
+
+        /*
+         * Contact Us
+         */
+        if (
+            fileName.includes(
+                'contactus'
+            ) ||
+            completeTitle.includes(
+                'contact us page'
             )
         ) {
             return 'Contact Us';
         }
 
-        return 'Home';
-    }
-
-    getPageName(testTitle, stepTitle) {
-        const testText =
-            testTitle.toLowerCase();
-
-        const stepText =
-            stepTitle.toLowerCase();
-
+        /*
+         * Products Page
+         */
         if (
-            stepText.includes('header') ||
-            stepText.includes('logo') ||
-            stepText.includes('products tab') ||
-            stepText.includes('who we are menu') ||
-            stepText.includes('b2b log in tab') ||
-            stepText.includes('contact us tab') ||
-            stepText.includes('search icon')
+            fileName.includes(
+                'productspage'
+            ) ||
+            completeTitle.includes(
+                'products page'
+            )
         ) {
-            return 'Header';
+            return 'Products Page';
         }
 
-        if (stepText.includes('footer')) {
-            return 'Footer';
-        }
-
+        /*
+         * Who We Are
+         */
         if (
-            stepText.includes('about us') ||
-            stepText.includes(
-                'travel retail experience'
+            fileName.includes(
+                'whoweare'
             ) ||
-            stepText.includes(
-                'award logo'
+            completeTitle.includes(
+                'who we are'
+            )
+        ) {
+            return 'Who We Are';
+        }
+
+        /*
+         * About Us
+         */
+        if (
+            fileName.includes(
+                'aboutus'
             ) ||
-            stepText.includes(
-                'expand your horizons'
-            ) ||
-            stepText.includes(
-                'more from nestlé'
+            completeTitle.includes(
+                'about us'
             )
         ) {
             return 'About Us';
         }
 
+        /*
+         * Food as the #1 Category
+         */
         if (
-            stepText.includes('food category') ||
-            stepText.includes('food as the') ||
-            stepText.includes('verse') ||
+            fileName.includes(
+                'food'
+            ) ||
+            completeTitle.includes(
+                'food as the'
+            ) ||
+            completeTitle.includes(
+                'food category'
+            )
+        ) {
+            return 'Food as the #1 Category';
+        }
+
+        /*
+         * Location
+         */
+        if (
+            fileName.includes(
+                'location'
+            ) ||
+            completeTitle.includes(
+                'location page'
+            )
+        ) {
+            return 'Location';
+        }
+
+        /*
+         * Home Page
+         */
+        if (
+            fileName.includes(
+                'homepage'
+            ) ||
+            completeTitle.includes(
+                'home page'
+            )
+        ) {
+            return 'Home Page';
+        }
+
+        return 'General';
+    }
+
+    getStepModuleName(
+        defaultModule,
+        stepTitle
+    ) {
+        const stepText =
+            String(stepTitle || '')
+                .toLowerCase();
+
+        /*
+         * B2B Login / Dashboard
+         */
+        if (
+            defaultModule ===
+            'B2B Login & Dashboard'
+        ) {
+            if (
+                stepText.includes(
+                    'dashboard'
+                ) ||
+                stepText.includes(
+                    'latest updates'
+                ) ||
+                stepText.includes(
+                    'product update'
+                ) ||
+                stepText.includes(
+                    'authenticated header'
+                ) ||
+                stepText.includes(
+                    'authenticated footer'
+                ) ||
+                stepText.includes(
+                    'information message'
+                ) ||
+                stepText.includes(
+                    'log out'
+                ) ||
+                stepText.includes(
+                    'logout'
+                ) ||
+                stepText.includes(
+                    'session is closed'
+                )
+            ) {
+                return 'B2B Dashboard';
+            }
+
+            return 'B2B Login';
+        }
+
+        /*
+         * Authentication setup remains
+         * under the current module.
+         */
+        if (
+            stepText.includes(
+                'open home page for b2b authentication'
+            ) ||
+            stepText.includes(
+                'open home page as b2b modal background'
+            ) ||
+            stepText.includes(
+                'open home page for forgot password'
+            ) ||
+            stepText.includes(
+                'open b2b login modal'
+            ) ||
+            stepText.includes(
+                'enter b2b credentials'
+            ) ||
+            stepText.includes(
+                'submit b2b login form'
+            )
+        ) {
+            return defaultModule;
+        }
+
+        /*
+         * Forgot Password
+         */
+        if (
+            stepText.includes(
+                'reset password'
+            ) ||
+            stepText.includes(
+                'forgot your password'
+            ) ||
+            stepText.includes(
+                'forgot password'
+            )
+        ) {
+            return 'B2B Forgot Password';
+        }
+
+        /*
+         * Claim Management
+         */
+        if (
+            stepText.includes(
+                'claim management'
+            ) ||
+            stepText.includes(
+                'file a claim'
+            ) ||
+            stepText.includes(
+                'proof of delivery'
+            ) ||
+            stepText.includes(
+                'synthetic product photos'
+            ) ||
+            stepText.includes(
+                'claim remains unsubmitted'
+            ) ||
+            stepText.includes(
+                'submit claim'
+            )
+        ) {
+            return 'Claim Management';
+        }
+
+        /*
+         * General Sales & Delivery Terms
+         */
+        if (
+            stepText.includes(
+                'general sales'
+            ) ||
+            stepText.includes(
+                'delivery terms'
+            ) ||
+            stepText.includes(
+                'storage and transportation'
+            ) ||
+            stepText.includes(
+                'pdf document'
+            ) ||
+            stepText.includes(
+                'document links'
+            )
+        ) {
+            return 'General Sales & Delivery Terms';
+        }
+
+        /*
+         * B2B Catalog
+         */
+        if (
+            defaultModule ===
+                'B2B Catalog' ||
+            stepText.includes(
+                'catalog'
+            ) ||
+            stepText.includes(
+                'select all'
+            ) ||
+            stepText.includes(
+                'deselect all'
+            )
+        ) {
+            return 'B2B Catalog';
+        }
+
+        /*
+         * Contact Us
+         */
+        if (
+            stepText.includes(
+                'contact us'
+            ) ||
+            stepText.includes(
+                'contact form'
+            ) ||
+            stepText.includes(
+                'send message'
+            ) ||
+            stepText.includes(
+                'country dropdown'
+            ) ||
+            stepText.includes(
+                'international phone'
+            )
+        ) {
+            return 'Contact Us';
+        }
+
+        /*
+         * CAPTCHA remains under
+         * the current module.
+         */
+        if (
+            stepText.includes(
+                'captcha'
+            )
+        ) {
+            return defaultModule;
+        }
+
+        /*
+         * About Us
+         */
+        if (
+            stepText.includes(
+                'about us'
+            ) ||
+            stepText.includes(
+                'travel retail experience'
+            ) ||
+            stepText.includes(
+                'expand your horizons'
+            ) ||
+            stepText.includes(
+                'more from nestle'
+            ) ||
+            stepText.includes(
+                'more from nestlé'
+            ) ||
+            stepText.includes(
+                'onwards to no.1'
+            ) ||
+            stepText.includes(
+                'award logo'
+            )
+        ) {
+            return 'About Us';
+        }
+
+        /*
+         * Food as the #1 Category
+         */
+        if (
+            stepText.includes(
+                'food as the'
+            ) ||
+            stepText.includes(
+                'food category'
+            ) ||
             stepText.includes(
                 'beyond confectionery'
             ) ||
@@ -194,11 +598,16 @@ class ExcelReporter {
                 'new shores'
             )
         ) {
-            return 'Food Category';
+            return 'Food as the #1 Category';
         }
 
+        /*
+         * Location
+         */
         if (
-            stepText.includes('location') ||
+            stepText.includes(
+                'location'
+            ) ||
             stepText.includes(
                 'company information'
             ) ||
@@ -209,60 +618,67 @@ class ExcelReporter {
             return 'Location';
         }
 
+        /*
+         * Keep Products Page
+         * under Products Page.
+         */
         if (
-            stepText.includes('contact us form') ||
-            stepText.includes(
-                'contact form'
-            ) ||
-            stepText.includes('captcha') ||
-            stepText.includes(
-                'send message'
-            )
+            defaultModule ===
+            'Products Page'
         ) {
-            return 'Contact Form';
+            return 'Products Page';
         }
 
+        /*
+         * Keep Home Page
+         * under Home Page.
+         */
         if (
-            testText.includes(
-                'products page'
-            ) ||
-            stepText.includes('product') ||
-            stepText.includes('brand filter') ||
-            stepText.includes('pagination')
+            defaultModule ===
+            'Home Page'
         ) {
-            return 'Products';
+            return 'Home Page';
         }
 
-        if (
-            stepText.includes('banner') ||
-            stepText.includes('hero')
-        ) {
-            return 'Hero Banner';
-        }
-
-        if (
-            stepText.includes(
-                'business lounge'
-            )
-        ) {
-            return 'Business Lounge';
-        }
-
-        return 'Home';
+        return defaultModule;
     }
 
     getSuccessRemark(stepTitle) {
         const normalizedTitle =
-            stepTitle.toLowerCase();
+            String(stepTitle || '')
+                .toLowerCase();
 
+        /*
+         * CAPTCHA
+         */
+        if (
+            normalizedTitle.includes(
+                'captcha'
+            )
+        ) {
+            return 'CAPTCHA section is displayed';
+        }
+
+        /*
+         * Navigation
+         */
         if (
             normalizedTitle.includes(
                 'navigate'
+            ) ||
+            normalizedTitle.startsWith(
+                'open '
+            ) ||
+            normalizedTitle.includes(
+                'return to'
             )
         ) {
             return 'Navigation successful';
         }
 
+        /*
+         * Text validation
+         */
         if (
             normalizedTitle.includes(
                 'heading'
@@ -272,11 +688,17 @@ class ExcelReporter {
             ) ||
             normalizedTitle.includes(
                 'breadcrumb'
+            ) ||
+            normalizedTitle.includes(
+                'instruction'
             )
         ) {
             return 'Text verified and element is visible';
         }
 
+        /*
+         * Images / Logos
+         */
         if (
             normalizedTitle.includes(
                 'image'
@@ -288,6 +710,45 @@ class ExcelReporter {
             return 'Image is visible';
         }
 
+        /*
+         * Search
+         */
+        if (
+            normalizedTitle.includes(
+                'search'
+            )
+        ) {
+            return 'Search functionality verified';
+        }
+
+        /*
+         * Filter
+         */
+        if (
+            normalizedTitle.includes(
+                'filter'
+            )
+        ) {
+            return 'Filter functionality verified';
+        }
+
+        /*
+         * Forms / Fields
+         */
+        if (
+            normalizedTitle.includes(
+                'form'
+            ) ||
+            normalizedTitle.includes(
+                'field'
+            )
+        ) {
+            return 'Form field validation successful';
+        }
+
+        /*
+         * Buttons / Links / Menus / Tabs / Icons
+         */
         if (
             normalizedTitle.includes(
                 'button'
@@ -308,41 +769,6 @@ class ExcelReporter {
             return 'Element visible and enabled';
         }
 
-        if (
-            normalizedTitle.includes(
-                'search'
-            )
-        ) {
-            return 'Search functionality verified';
-        }
-
-        if (
-            normalizedTitle.includes(
-                'filter'
-            )
-        ) {
-            return 'Filter functionality verified';
-        }
-
-        if (
-            normalizedTitle.includes(
-                'form'
-            ) ||
-            normalizedTitle.includes(
-                'field'
-            )
-        ) {
-            return 'Form field validation successful';
-        }
-
-        if (
-            normalizedTitle.includes(
-                'captcha'
-            )
-        ) {
-            return 'CAPTCHA section is displayed';
-        }
-
         return 'Validation successful';
     }
 
@@ -356,28 +782,46 @@ class ExcelReporter {
                 /\u001b\[[0-9;]*m/g,
                 ''
             )
-            .replace(/\s+/g, ' ')
+            .replace(
+                /\s+/g,
+                ' '
+            )
             .trim()
             .substring(0, 1000);
     }
 
-    groupResultsByPage() {
+    groupResultsByModule() {
         const groups = [];
         const groupMap = new Map();
 
-        for (const result of this.results) {
-            const groupKey =
-                `${result.module}::${result.page}`;
+        /*
+         * Skipped results are excluded
+         * from the Excel report.
+         */
+        const reportableResults =
+            this.results.filter(
+                result =>
+                    result.status !==
+                    'Skipped'
+            );
 
-            if (!groupMap.has(groupKey)) {
+        for (
+            const result
+            of reportableResults
+        ) {
+            if (
+                !groupMap.has(
+                    result.module
+                )
+            ) {
                 const newGroup = {
-                    module: result.module,
-                    page: result.page,
+                    module:
+                        result.module,
                     results: []
                 };
 
                 groupMap.set(
-                    groupKey,
+                    result.module,
                     newGroup
                 );
 
@@ -385,7 +829,7 @@ class ExcelReporter {
             }
 
             groupMap
-                .get(groupKey)
+                .get(result.module)
                 .results
                 .push(result);
         }
@@ -398,35 +842,43 @@ class ExcelReporter {
             new ExcelJS.Workbook();
 
         workbook.creator =
-            'NITLN Playwright Automation';
+            `${this.websiteName} Playwright Automation`;
 
         workbook.created =
             new Date();
 
+        workbook.modified =
+            new Date();
+
         const worksheet =
             workbook.addWorksheet(
-                'Detailed Validation Report',
+                'Automation Test Report',
                 {
                     views: [
                         {
-                            showGridLines: true
+                            state: 'normal',
+                            showGridLines: true,
+                            zoomScale: 100
                         }
                     ]
                 }
             );
 
+        /*
+         * Report columns.
+         */
         worksheet.columns = [
             {
                 key: 'serialNumber',
                 width: 10
             },
             {
-                key: 'page',
-                width: 30
+                key: 'module',
+                width: 34
             },
             {
-                key: 'button',
-                width: 48
+                key: 'validation',
+                width: 52
             },
             {
                 key: 'status',
@@ -438,29 +890,48 @@ class ExcelReporter {
             }
         ];
 
-        const totalComponents =
-            this.results.length;
-
-        const passedComponents =
+        /*
+         * Exclude skipped results from
+         * Summary and Detailed Results.
+         */
+        const reportableResults =
             this.results.filter(
                 result =>
-                    result.status === 'Pass'
+                    result.status !==
+                    'Skipped'
+            );
+
+        const totalComponents =
+            reportableResults.length;
+
+        const passedComponents =
+            reportableResults.filter(
+                result =>
+                    result.status ===
+                    'Pass'
             ).length;
 
         const failedComponents =
-            this.results.filter(
+            reportableResults.filter(
                 result =>
-                    result.status === 'Fail'
+                    result.status ===
+                    'Fail'
             ).length;
 
-        const executionTimeSeconds = (
+        const executionTimeSeconds =
             (
-                Date.now() -
-                this.executionStartTime
-            ) / 1000
-        ).toFixed(2);
+                (
+                    Date.now() -
+                    this.executionStartTime
+                ) / 1000
+            ).toFixed(2);
 
-        this.createTitle(worksheet);
+        /*
+         * Build report.
+         */
+        this.createTitle(
+            worksheet
+        );
 
         this.createExecutionDetails(
             worksheet,
@@ -474,14 +945,29 @@ class ExcelReporter {
             failedComponents
         );
 
-        this.createDetailedResults(
-            worksheet
-        );
+        // Create detailed results as separate sheets per page/module
+        this.createDetailedSheets(workbook);
 
         this.applyFinalFormatting(
             worksheet
         );
 
+        if (
+            String(process.env.REPORT_HIDE_EXTRA_COLUMNS || '') ===
+            'true'
+        ) {
+            this.hideUnusedColumns(
+                worksheet
+            );
+        }
+
+        this.configurePrintSettings(
+            worksheet
+        );
+
+        /*
+         * Create report directory.
+         */
         const reportDirectory =
             path.join(
                 process.cwd(),
@@ -495,37 +981,147 @@ class ExcelReporter {
             }
         );
 
-        const timestamp =
-            new Date()
-                .toISOString()
-                .replace(/[:.]/g, '-');
+        /*
+         * Create safe file name.
+         */
+        const safeWebsiteName =
+            this.websiteName
+                .replace(
+                    /[<>:"/\\|?*]/g,
+                    '_'
+                )
+                .replace(
+                    /\s+/g,
+                    '_'
+                )
+                .replace(
+                    /_+/g,
+                    '_'
+                );
 
-        const reportPath =
+        const reportFileName =
+            `${safeWebsiteName}_Automation_Test_Report.xlsx`;
+
+        let reportPath =
             path.join(
                 reportDirectory,
-                `NITLN-Detailed-Validation-Report-${timestamp}.xlsx`
+                reportFileName
             );
 
-        await workbook.xlsx.writeFile(
+        const temporaryReportPath =
+            path.join(
+                reportDirectory,
+                `${safeWebsiteName}_Automation_Test_Report_Temporary.xlsx`
+            );
+
+        /*
+         * Remove previous temporary file.
+         */
+        if (
+            fs.existsSync(
+                temporaryReportPath
+            )
+        ) {
+            fs.unlinkSync(
+                temporaryReportPath
+            );
+        }
+
+        /*
+         * Generate workbook in memory.
+         */
+        const workbookBuffer =
+            await workbook.xlsx
+                .writeBuffer();
+
+        if (
+            !workbookBuffer ||
+            workbookBuffer.length === 0
+        ) {
+            throw new Error(
+                'ExcelJS returned an empty workbook buffer.'
+            );
+        }
+
+        /*
+         * Write temporary workbook.
+         */
+        fs.writeFileSync(
+            temporaryReportPath,
+            Buffer.from(
+                workbookBuffer
+            )
+        );
+
+        /*
+         * Validate temporary workbook.
+         */
+        this.validateGeneratedWorkbook(
+            temporaryReportPath
+        );
+
+        /*
+         * Remove old final report.
+         */
+        if (fs.existsSync(reportPath)) {
+            try {
+                fs.unlinkSync(reportPath);
+            } catch (error) {
+                // File is likely open/locked. Fall back to timestamped filename
+                const timestamp = new Date()
+                    .toISOString()
+                    .replace(/[:.]/g, '-');
+
+                const altReportPath = path.join(
+                    reportDirectory,
+                    `${safeWebsiteName}_Automation_Test_Report_${timestamp}.xlsx`
+                );
+
+                console.warn(
+                    `Could not overwrite existing report (locked). Saving as ${altReportPath}`
+                );
+
+                reportPath = altReportPath;
+            }
+        }
+
+        /*
+         * Move temporary report to
+         * final report.
+         */
+        fs.renameSync(
+            temporaryReportPath,
+            reportPath
+        );
+
+        /*
+         * Final validation.
+         */
+        this.validateGeneratedWorkbook(
             reportPath
         );
 
         console.log('');
+
         console.log(
             'Detailed Excel report generated successfully:'
         );
 
-        console.log(reportPath);
+        console.log(
+            reportPath
+        );
     }
 
     createTitle(worksheet) {
-        worksheet.mergeCells('A1:E1');
+        worksheet.mergeCells(
+            'A1:E1'
+        );
 
         const titleCell =
             worksheet.getCell('A1');
 
         titleCell.value =
-            'NITLN Website Detailed Validation Report';
+            `${this.websiteName} - Automation Test Report`;
 
         titleCell.font = {
             bold: true,
@@ -548,14 +1144,20 @@ class ExcelReporter {
             vertical: 'middle'
         };
 
-        worksheet.getRow(1).height = 30;
+        titleCell.border =
+            this.getThinBorder();
+
+        worksheet.getRow(1).height =
+            30;
     }
 
     createExecutionDetails(
         worksheet,
         executionTimeSeconds
     ) {
-        worksheet.mergeCells('A3:E3');
+        worksheet.mergeCells(
+            'A3:E3'
+        );
 
         const heading =
             worksheet.getCell('A3');
@@ -565,25 +1167,37 @@ class ExcelReporter {
 
         heading.font = {
             bold: true,
-            size: 12
+            size: 12,
+            color: {
+                argb: 'FFFFFFFF'
+            }
         };
 
         heading.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFB4CCE3'
+                argb: 'FF0B4A86'
             }
         };
 
+        heading.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
+        };
+
+        heading.border =
+            this.getThinBorder();
+
         const executionDate =
-            new Date().toLocaleString(
-                'en-IN',
-                {
-                    timeZone:
-                        'Asia/Kolkata'
-                }
-            );
+            new Date()
+                .toLocaleString(
+                    'en-IN',
+                    {
+                        timeZone:
+                            'Asia/Kolkata'
+                    }
+                );
 
         const executionDetails = [
             [
@@ -597,11 +1211,15 @@ class ExcelReporter {
             ],
             [
                 'Browser',
-                'Chromium'
+                this.browserName
             ],
             [
                 'Execution Time',
                 `${executionTimeSeconds} sec`
+            ],
+            [
+                'Executed By',
+                this.executedBy
             ]
         ];
 
@@ -610,31 +1228,59 @@ class ExcelReporter {
                 const rowNumber =
                     index + 4;
 
-                worksheet.getCell(
-                    `A${rowNumber}`
-                ).value = detail[0];
+                const labelCell =
+                    worksheet.getCell(
+                        `A${rowNumber}`
+                    );
 
-                worksheet.getCell(
-                    `A${rowNumber}`
-                ).font = {
+                labelCell.value =
+                    detail[0];
+
+                labelCell.font = {
                     bold: true
+                };
+
+                labelCell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: {
+                        argb: 'FFD9E7F5'
+                    }
+                };
+
+                labelCell.alignment = {
+                    horizontal: 'left',
+                    vertical: 'middle'
                 };
 
                 worksheet.mergeCells(
                     `B${rowNumber}:E${rowNumber}`
                 );
 
-                worksheet.getCell(
-                    `B${rowNumber}`
-                ).value = detail[1];
+                const valueCell =
+                    worksheet.getCell(
+                        `B${rowNumber}`
+                    );
 
-                worksheet.getCell(
-                    `B${rowNumber}`
-                ).font = {
-                    color: {
-                        argb: 'FF008000'
-                    }
+                valueCell.value =
+                    detail[1];
+
+                valueCell.alignment = {
+                    horizontal: 'left',
+                    vertical: 'middle'
                 };
+
+                for (
+                    let columnNumber = 1;
+                    columnNumber <= 5;
+                    columnNumber += 1
+                ) {
+                    worksheet
+                        .getRow(rowNumber)
+                        .getCell(columnNumber)
+                        .border =
+                        this.getThinBorder();
+                }
             }
         );
     }
@@ -645,157 +1291,297 @@ class ExcelReporter {
         passedComponents,
         failedComponents
     ) {
-        worksheet.mergeCells('A9:E9');
+        /*
+         * Summary title.
+         */
+        worksheet.mergeCells(
+            'A10:C10'
+        );
 
         const heading =
-            worksheet.getCell('A9');
+            worksheet.getCell('A10');
 
-        heading.value = 'Summary';
+        heading.value =
+            'Summary';
 
         heading.font = {
             bold: true,
-            size: 12
+            size: 12,
+            color: {
+                argb: 'FFFFFFFF'
+            }
         };
 
         heading.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFB4CCE3'
+                argb: 'FF0B4A86'
             }
         };
 
-        const summaryHeaderRow =
-            worksheet.getRow(11);
-
-        summaryHeaderRow.values = [
-            'Total Components',
-            'Passed',
-            'Failed'
-        ];
-
-        summaryHeaderRow.font = {
-            bold: true
+        heading.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
         };
 
-        summaryHeaderRow.fill = {
+        heading.border =
+            this.getThinBorder();
+
+        /*
+         * Header row.
+         *
+         * IMPORTANT:
+         * All headers are light blue.
+         * Passed/Failed headers are NOT green/red.
+         */
+        const summaryHeaderRow =
+            worksheet.getRow(12);
+
+        summaryHeaderRow.getCell(1).value =
+            'Total Components';
+
+        summaryHeaderRow.getCell(2).value =
+            'Passed';
+
+        summaryHeaderRow.getCell(3).value =
+            'Failed';
+
+        for (
+            let columnNumber = 1;
+            columnNumber <= 3;
+            columnNumber += 1
+        ) {
+            const cell =
+                summaryHeaderRow.getCell(
+                    columnNumber
+                );
+
+            cell.font = {
+                bold: true,
+                color: {
+                    argb: 'FF000000'
+                }
+            };
+
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: 'FFD9E7F5'
+                }
+            };
+
+            cell.alignment = {
+                horizontal: 'center',
+                vertical: 'middle'
+            };
+
+            cell.border =
+                this.getThinBorder();
+        }
+
+        /*
+         * Value row.
+         */
+
+        const summaryValueRow =
+            worksheet.getRow(13);
+
+        summaryValueRow.getCell(1).value =
+            totalComponents;
+
+        summaryValueRow.getCell(2).value =
+            passedComponents;
+
+        summaryValueRow.getCell(3).value =
+            failedComponents;
+
+        // Keep columns D and E empty (do not apply header fill to D/E).
+        this.clearCellFormatting(summaryHeaderRow.getCell(4));
+        this.clearCellFormatting(summaryValueRow.getCell(4));
+        this.clearCellFormatting(summaryHeaderRow.getCell(5));
+        this.clearCellFormatting(summaryValueRow.getCell(5));
+
+        /*
+         * Total Components:
+         * white background + black number.
+         */
+        this.formatSummaryValueCell(
+            summaryValueRow.getCell(1),
+            'FF000000',
+            'FFFFFFFF'
+        );
+
+        /*
+         * Passed:
+         * light green background + green number.
+         */
+        this.formatSummaryValueCell(
+            summaryValueRow.getCell(2),
+            'FF008000',
+            'FFE2F0D9'
+        );
+
+        /*
+         * Failed:
+         * light red background + red number.
+         */
+        this.formatSummaryValueCell(
+            summaryValueRow.getCell(3),
+            'FFFF0000',
+            'FFF4CCCC'
+        );
+
+        /*
+         * Make the Summary rows the same
+         * height as the screenshot style.
+         */
+        summaryHeaderRow.height = 24;
+        summaryValueRow.height = 24;
+
+        /*
+         * Keep columns D and E empty (do not apply header fill to D).
+         */
+        this.clearCellFormatting(
+            summaryHeaderRow.getCell(4)
+        );
+
+        this.clearCellFormatting(
+            summaryValueRow.getCell(4)
+        );
+
+        // Also ensure column E is clear
+        this.clearCellFormatting(
+            summaryHeaderRow.getCell(5)
+        );
+
+        this.clearCellFormatting(
+            summaryValueRow.getCell(5)
+        );
+    }
+
+    formatSummaryValueCell(
+        cell,
+        fontColor,
+        backgroundColor
+    ) {
+        cell.font = {
+            bold: true,
+            color: {
+                argb: fontColor
+            }
+        };
+
+        cell.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFD9D9D9'
+                argb: backgroundColor
             }
         };
 
-        const summaryValueRow =
-            worksheet.getRow(12);
-
-        summaryValueRow.values = [
-            totalComponents,
-            passedComponents,
-            failedComponents
-        ];
-
-        summaryValueRow.font = {
-            bold: true
+        cell.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
         };
 
-        worksheet.getCell('B12').font = {
-            bold: true,
-            color: {
-                argb: 'FF008000'
-            }
-        };
-
-        worksheet.getCell('C12').font = {
-            bold: true,
-            color: {
-                argb: 'FFFF0000'
-            }
-        };
-
-        for (
-            let rowNumber = 11;
-            rowNumber <= 12;
-            rowNumber += 1
-        ) {
-            for (
-                let columnNumber = 1;
-                columnNumber <= 3;
-                columnNumber += 1
-            ) {
-                const cell =
-                    worksheet
-                        .getRow(rowNumber)
-                        .getCell(columnNumber);
-
-                cell.border =
-                    this.getThinBorder();
-
-                cell.alignment = {
-                    horizontal: 'center',
-                    vertical: 'middle'
-                };
-            }
-        }
+        cell.border =
+            this.getThinBorder();
     }
 
-    createDetailedResults(worksheet) {
-        worksheet.mergeCells('A15:E15');
+    createDetailedResults(
+        worksheet
+    ) {
+        worksheet.mergeCells(
+            'A16:E16'
+        );
 
         const heading =
-            worksheet.getCell('A15');
+            worksheet.getCell('A16');
 
         heading.value =
             'Detailed Results';
 
         heading.font = {
             bold: true,
-            size: 13
+            size: 13,
+            color: {
+                argb: 'FFFFFFFF'
+            }
         };
 
         heading.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: {
-                argb: 'FFB4CCE3'
+                argb: 'FF0B4A86'
             }
         };
 
+        heading.alignment = {
+            horizontal: 'center',
+            vertical: 'middle'
+        };
+
+        heading.border =
+            this.getThinBorder();
+
+        /*
+         * Detailed result headers.
+         */
         const headerRow =
-            worksheet.getRow(17);
+            worksheet.getRow(18);
 
         headerRow.values = [
             'Sl.No',
-            'Page',
+            'Module',
             'Button / Validation',
             'Status',
             'Remarks'
         ];
 
-        headerRow.font = {
-            bold: true
-        };
+        for (
+            let columnNumber = 1;
+            columnNumber <= 5;
+            columnNumber += 1
+        ) {
+            const cell =
+                headerRow.getCell(
+                    columnNumber
+                );
 
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: {
-                argb: 'FFD9D9D9'
-            }
-        };
+            cell.font = {
+                bold: true,
+                color: {
+                    argb: 'FFFFFFFF'
+                }
+            };
 
-        headerRow.alignment = {
-            horizontal: 'left',
-            vertical: 'middle'
-        };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: 'FF0B4A86'
+                }
+            };
+
+            cell.alignment = {
+                horizontal: 'center',
+                vertical: 'middle'
+            };
+
+            cell.border =
+                this.getThinBorder();
+        }
 
         headerRow.height = 24;
 
-        const groups =
-            this.groupResultsByPage();
-
-        let currentRowNumber = 18;
+        let currentRowNumber = 19;
         let serialNumber = 1;
+
+        const groups =
+            this.groupResultsByModule();
 
         for (const group of groups) {
             const groupStartRow =
@@ -810,12 +1596,21 @@ class ExcelReporter {
                         currentRowNumber
                     );
 
+                /*
+                 * Validation.
+                 */
                 row.getCell(3).value =
-                    result.button;
+                    result.validation;
 
+                /*
+                 * Status.
+                 */
                 row.getCell(4).value =
                     result.status;
 
+                /*
+                 * Remarks.
+                 */
                 row.getCell(5).value =
                     result.remarks;
 
@@ -824,13 +1619,34 @@ class ExcelReporter {
                     wrapText: true
                 };
 
+                /*
+                 * Borders.
+                 */
+                for (
+                    let columnNumber = 1;
+                    columnNumber <= 5;
+                    columnNumber += 1
+                ) {
+                    row.getCell(
+                        columnNumber
+                    ).border =
+                        this.getThinBorder();
+                }
+
+                /*
+                 * Status formatting.
+                 */
                 this.formatStatusCell(
                     row.getCell(4),
                     result.status
                 );
 
+                /*
+                 * Failed remarks background.
+                 */
                 if (
-                    result.status === 'Fail'
+                    result.status ===
+                    'Fail'
                 ) {
                     row.getCell(5).fill = {
                         type: 'pattern',
@@ -847,6 +1663,11 @@ class ExcelReporter {
             const groupEndRow =
                 currentRowNumber - 1;
 
+            /*
+             * Merge Sl.No and Module cells
+             * for multiple results belonging
+             * to the same module.
+             */
             if (
                 groupEndRow >
                 groupStartRow
@@ -860,67 +1681,208 @@ class ExcelReporter {
                 );
             }
 
-            worksheet.getCell(
-                `A${groupStartRow}`
-            ).value = serialNumber;
+            const serialCell =
+                worksheet.getCell(
+                    `A${groupStartRow}`
+                );
 
-            worksheet.getCell(
-                `B${groupStartRow}`
-            ).value = group.page;
+            serialCell.value =
+                serialNumber;
 
-            worksheet.getCell(
-                `A${groupStartRow}`
-            ).alignment = {
+            serialCell.alignment = {
                 horizontal: 'center',
-                vertical: 'middle'
+                vertical: 'middle',
+                wrapText: true
             };
 
-            worksheet.getCell(
-                `B${groupStartRow}`
-            ).alignment = {
+            serialCell.border =
+                this.getThinBorder();
+
+            const moduleCell =
+                worksheet.getCell(
+                    `B${groupStartRow}`
+                );
+
+            moduleCell.value =
+                group.module;
+
+            moduleCell.alignment = {
                 horizontal: 'left',
                 vertical: 'middle',
                 wrapText: true
             };
 
+            moduleCell.border =
+                this.getThinBorder();
+
             serialNumber += 1;
         }
     }
 
-    formatStatusCell(cell, status) {
-        cell.font = {
-            bold: true,
-            color: {
-                argb:
-                    status === 'Pass'
-                        ? 'FF008000'
-                        : 'FFFF0000'
-            }
-        };
+    createDetailedSheets(workbook) {
+        // Allow sheet grouping by module (default) or by file name when
+        // REPORT_SHEET_NAME=file is set.
+        const sheetMode = String(process.env.REPORT_SHEET_NAME || 'module').toLowerCase();
 
-        cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: {
-                argb:
-                    status === 'Pass'
-                        ? 'FFE2F0D9'
-                        : 'FFF4CCCC'
-            }
-        };
+        let groups = [];
 
-        cell.alignment = {
-            horizontal: 'left',
-            vertical: 'middle'
-        };
+        if (sheetMode === 'file') {
+            const map = new Map();
+            for (const res of this.results.filter(r => r.status !== 'Skipped')) {
+                const key = res.fileName || res.module || 'Sheet';
+                if (!map.has(key)) {
+                    map.set(key, { module: key, results: [] });
+                }
+                map.get(key).results.push(res);
+            }
+            groups = Array.from(map.values());
+        } else {
+            groups = this.groupResultsByModule();
+        }
+
+        for (const group of groups) {
+            // Sanitize sheet name (max 31 chars, remove invalid chars)
+            let sheetName = String(group.module || 'Sheet')
+                .replace(/[\\\/*?:\[\]]/g, '_')
+                .substring(0, 31);
+
+            // Ensure unique sheet name
+            let uniqueName = sheetName;
+            let idx = 1;
+            while (workbook.getWorksheet(uniqueName)) {
+                uniqueName = `${sheetName.substring(0, 28)}_${idx}`;
+                idx += 1;
+            }
+
+            const worksheet = workbook.addWorksheet(uniqueName, {
+                views: [{ state: 'normal', showGridLines: true, zoomScale: 100 }]
+            });
+
+            // Set columns similar to main report
+            worksheet.columns = [
+                { key: 'serial', width: 8 },
+                { key: 'module', width: 34 },
+                { key: 'validation', width: 52 },
+                { key: 'status', width: 18 },
+                { key: 'remarks', width: 70 }
+            ];
+
+            // Title
+            worksheet.mergeCells('A1:E1');
+            const titleCell = worksheet.getCell('A1');
+            titleCell.value = `${this.websiteName} - ${group.module}`;
+            titleCell.font = { bold: true, size: 14 };
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+            // Header row
+            const headerRow = worksheet.getRow(3);
+            headerRow.values = ['Sl.No', 'Module', 'Button / Validation', 'Status', 'Remarks'];
+            headerRow.height = 20;
+            for (let col = 1; col <= 5; col += 1) {
+                const cell = headerRow.getCell(col);
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B4A86' } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border = this.getThinBorder();
+            }
+
+            // Data rows
+            let rowNumber = 4;
+            let serial = 1;
+            for (const result of group.results) {
+                const row = worksheet.getRow(rowNumber);
+                row.getCell(1).value = serial;
+                row.getCell(2).value = result.module;
+                row.getCell(3).value = result.validation;
+                row.getCell(4).value = result.status;
+                row.getCell(5).value = result.remarks;
+
+                // Apply borders and alignment
+                for (let c = 1; c <= 5; c += 1) {
+                    const cell = row.getCell(c);
+                    cell.border = this.getThinBorder();
+                    cell.alignment = { vertical: 'top', wrapText: true };
+                }
+
+                // Status formatting
+                this.formatStatusCell(row.getCell(4), result.status);
+
+                if (result.status === 'Fail') {
+                    row.getCell(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE5E5' } };
+                }
+
+                rowNumber += 1;
+                serial += 1;
+            }
+
+            // Final formatting per sheet
+            this.applyFinalFormatting(worksheet);
+            // Set print area for the sheet
+            try {
+                const lastRow = Math.max(worksheet.rowCount || 1, 1);
+                worksheet.pageSetup = worksheet.pageSetup || {};
+                worksheet.pageSetup.printArea = `A1:E${lastRow}`;
+            } catch (e) {}
+        }
     }
 
-    applyFinalFormatting(worksheet) {
+    formatStatusCell(
+        cell,
+        status
+    ) {
+        if (status === 'Pass') {
+            cell.font = {
+                bold: true,
+                color: {
+                    argb: 'FF008000'
+                }
+            };
+
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: 'FFE2F0D9'
+                }
+            };
+        } else {
+            cell.font = {
+                bold: true,
+                color: {
+                    argb: 'FFFF0000'
+                }
+            };
+
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {
+                    argb: 'FFF4CCCC'
+                }
+            };
+        }
+
+        cell.alignment = {
+            horizontal: 'center',
+            vertical: 'middle',
+            wrapText: true
+        };
+
+        cell.border =
+            this.getThinBorder();
+    }
+
+    applyFinalFormatting(
+        worksheet
+    ) {
         const lastRow =
             worksheet.rowCount;
 
+        /*
+         * Format detailed result area.
+         */
         for (
-            let rowNumber = 17;
+            let rowNumber = 18;
             rowNumber <= lastRow;
             rowNumber += 1
         ) {
@@ -928,6 +1890,8 @@ class ExcelReporter {
                 worksheet.getRow(
                     rowNumber
                 );
+
+            row.hidden = false;
 
             for (
                 let columnNumber = 1;
@@ -944,46 +1908,220 @@ class ExcelReporter {
 
                 cell.alignment = {
                     ...cell.alignment,
-                    vertical: 'top',
+                    vertical:
+                        cell.alignment?.vertical ||
+                        'top',
                     wrapText: true
                 };
             }
         }
 
-        worksheet.autoFilter = {
-            from: 'A17',
-            to: 'E17'
-        };
+        /*
+         * Give detailed rows a reasonable height.
+         */
+        for (
+            let rowNumber = 19;
+            rowNumber <= lastRow;
+            rowNumber += 1
+        ) {
+            worksheet.getRow(
+                rowNumber
+            ).height = 32;
+        }
 
+        /*
+         * Detailed header.
+         */
+        worksheet.getRow(18).height =
+            24;
+
+        /*
+         * Normal scrolling.
+         * No frozen rows or columns.
+         */
         worksheet.views = [
             {
-                state: 'frozen',
-                ySplit: 17,
-                showGridLines: true
+                state: 'normal',
+                showGridLines: true,
+                zoomScale: 100
             }
         ];
 
-        worksheet.pageSetup = {
-            orientation: 'landscape',
-            fitToPage: true,
-            fitToWidth: 1,
-            fitToHeight: 0
-        };
+        /*
+         * No filter arrows.
+         */
+        worksheet.autoFilter = null;
     }
 
+    hideUnusedColumns(
+        worksheet
+    ) {
+        /*
+         * Keep A:E visible.
+         */
+        for (
+            let columnNumber = 1;
+            columnNumber <= 5;
+            columnNumber += 1
+        ) {
+            worksheet.getColumn(
+                columnNumber
+            ).hidden = false;
+        }
+
+        /*
+         * Hide F onward.
+         */
+        const hideUntil = 300;
+
+        for (
+            let columnNumber = 6;
+            columnNumber <= hideUntil;
+            columnNumber += 1
+        ) {
+            try {
+                worksheet.getColumn(
+                    columnNumber
+                ).hidden = true;
+            } catch (error) {
+                // Ignore unused column errors.
+            }
+        }
+    }
+
+    configurePrintSettings(
+        worksheet
+    ) {
+        const lastRow =
+            Math.max(
+                worksheet.rowCount || 1,
+                1
+            );
+
+        worksheet.pageSetup = {
+            orientation: 'landscape',
+            paperSize: 9,
+            fitToPage: true,
+            fitToWidth: 1,
+            fitToHeight: 0,
+            horizontalCentered: true,
+            verticalCentered: false,
+            printArea:
+                `A1:E${lastRow}`,
+            margins: {
+                left: 0.25,
+                right: 0.25,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.2,
+                footer: 0.2
+            }
+        };
+
+        worksheet.pageSetup.printArea =
+            `A1:E${lastRow}`;
+
+        /*
+         * Repeat detailed-result header
+         * on additional printed pages.
+         */
+        worksheet.pageSetup.printTitlesRow =
+            '18:18';
+    }
+
+    clearCellFormatting(
+        cell
+    ) {
+        cell.value = null;
+        cell.font = undefined;
+        cell.fill = undefined;
+        cell.border = undefined;
+        cell.numFmt = undefined;
+        cell.alignment = undefined;
+        cell.protection = undefined;
+    }
+
+    validateGeneratedWorkbook(
+        reportPath
+    ) {
+        if (
+            !fs.existsSync(
+                reportPath
+            )
+        ) {
+            throw new Error(
+                `Excel report was not created: ${reportPath}`
+            );
+        }
+
+        const reportStats =
+            fs.statSync(
+                reportPath
+            );
+
+        if (
+            reportStats.size <= 0
+        ) {
+            throw new Error(
+                'Generated Excel report is empty.'
+            );
+        }
+
+        const fileDescriptor =
+            fs.openSync(
+                reportPath,
+                'r'
+            );
+
+        const signatureBuffer =
+            Buffer.alloc(4);
+
+        try {
+            fs.readSync(
+                fileDescriptor,
+                signatureBuffer,
+                0,
+                4,
+                0
+            );
+        } finally {
+            fs.closeSync(
+                fileDescriptor
+            );
+        }
+
+        /*
+         * XLSX files are ZIP packages.
+         */
+        const validZipSignature =
+            signatureBuffer[0] === 0x50 &&
+            signatureBuffer[1] === 0x4B &&
+            signatureBuffer[2] === 0x03 &&
+            signatureBuffer[3] === 0x04;
+
+        if (
+            !validZipSignature
+        ) {
+            throw new Error(
+                'Generated file is not a valid XLSX ZIP package.'
+            );
+        }
+    }
+    
+
     getThinBorder() {
-        const borderStyle = {
+        const createBorderSide = () => ({
             style: 'thin',
             color: {
                 argb: 'FF808080'
             }
-        };
+        });
 
         return {
-            top: borderStyle,
-            left: borderStyle,
-            bottom: borderStyle,
-            right: borderStyle
+            top: createBorderSide(),
+            left: createBorderSide(),
+            bottom: createBorderSide(),
+            right: createBorderSide()
         };
     }
 }

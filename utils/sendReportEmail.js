@@ -189,7 +189,7 @@ async function sendReportEmail() {
 
     const emailSubject =
         process.env.EMAIL_SUBJECT ||
-        'Playwright Automation Report - Project NITLN';
+        'Playwright Automation Report - Project NITR';
 
     const emailMessage =
         process.env.EMAIL_MESSAGE ||
@@ -236,7 +236,7 @@ async function sendReportEmail() {
         attachments: [
             {
                 filename:
-                    'NITLN_Automation_TestReport.xlsx',
+                    'NITR_Automation_TestReport.xlsx',
 
                 path:
                     latestReport.completePath,
